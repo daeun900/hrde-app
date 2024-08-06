@@ -1,10 +1,11 @@
-import React, { useContext, useState }  from "react";
+import React, { useContext, useState, useEffect }  from "react";
 import styled from "styled-components/native";
-import { Text, View, TouchableOpacity, StyleSheet} from "react-native";
+import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TopSec} from "../components";
 import { UserContext } from "../context/userContext";
 import { useRoute } from '@react-navigation/native';
+import axios from 'axios';
 
 const Container = styled.ScrollView`
   padding: 25px;
@@ -12,9 +13,12 @@ const Container = styled.ScrollView`
   border-top-width: 1px;
   border-color: #ededed ;
 `;
+const SSmallTxt = styled.Text`
+  font-size: 12px;
+`
 
 const SmallTxt = styled.Text`
-  font-size: 12px;
+  font-size: 14px;
 `
 
 const MidTxt = styled.Text`
@@ -105,16 +109,17 @@ const ContentContainer = styled.View`
 `;
 
 const ListItem = styled.View`
-  padding: 15px;
+  padding: 0 5px;
   border-bottom-width: 1px;
   border-color: #eee;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  height: 80px;
 `
 const Num = styled.Text`
   color: #A0A0A0;
-  margin-right: 20px;
+  margin-right: 15px;
   font-size: 16px;
 `
 
@@ -125,100 +130,130 @@ const YellowButton = styled.TouchableOpacity`
   margin-bottom: 7px;
 `
 
-const ClassData = [
-  { num: 1, title: '프롤로그', progress: 0 },
-  { num: 2, title: 'AI로 변화되는 미래!', progress: 0 },
-  { num: 3, title: 'AI로 변화되는 미래!', progress: 0 },
-];
-
-const DownloadData = [
-  { num: 1, title: '종합평가 학습자료' },
-  { num: 2, title: '보충심화학습_요약자료'},
-];
-
 const LectureDetail = ({ navigation }) => {
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
   const {userNm} = useContext(UserContext);
   const [activeTab, setActiveTab] = useState('tab1');
   const route = useRoute();
-  const { ContentsName, ProgressStep, ProgressNum, Chapter, ProgressP } = route.params;
+  const { Seq  } = route.params; //Seq값 가져오기
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchLectureDetail = async () => {
+      try {
+        const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq });
+        const fetchedData = response.data;
 
-  console.log({ ContentsName, ProgressStep, ProgressNum, Chapter, ProgressP } );
+        console.log('Fetched Data:', fetchedData); // 데이터 확인
+        setData(fetchedData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLectureDetail();
+  }, [Seq]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  if (!data) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>데이터를 불러오는 중 오류가 발생했습니다.</Text>
+      </View>
+    );
+  }
 
   return (
     <View insets={insets} style={{flex:1}}>
         <TopSec name={userNm}/>
         <Container contentContainerStyle={{ paddingBottom: insets.bottom + 20}}>
           <LectureDetailBox>
-              <Title>
-                  {ContentsName}
-              </Title>
+              <Title>{data.title}</Title>
               <LectureDetailTxt>
                   <Text style={{color:'#767676'}}>수강기간</Text>
-                  <Text>2024-07-01~2024-07-24</Text>
+                  <Text>{data.lectureStart} ~ {data.lectureEnd}</Text>
               </LectureDetailTxt>
               <LectureDetailTxt>
                   <Text style={{color:'#767676'}}>남은수강일</Text>
-                  <Text>23일</Text>
+                  <Text>{data.daysLeft}일</Text>
               </LectureDetailTxt>
               <LectureDetailTxt>
                   <Text style={{color:'#767676'}}>내용전문가</Text>
-                  <Text>이성훈, 오재우</Text>
+                  <Text>{data.professor}</Text>
               </LectureDetailTxt>
               <ProgressWrap>
                   <ProgressBox style={{width: '40%'}}>
                       <ProgressTitle><Text>현재 진행상태</Text></ProgressTitle>
-                      <Progress style={{flexDirection:'column'}}><Point>{ProgressStep}</Point><SmallTxt style={{color: '#767676'}}>(수강대기중)</SmallTxt></Progress>
+                      <Progress style={{flexDirection:'column'}}><Point>{data.classNum}</Point><SSmallTxt style={{color: '#767676'}}>({data.classStatus})</SSmallTxt></Progress>
                   </ProgressBox>
                   <ProgressBox>
                       <ProgressTitle><Text>강의진도</Text></ProgressTitle>
-                      <Progress><Point> {ProgressNum}</Point><SmallTxt>/{Chapter}</SmallTxt></Progress>
+                      <Progress><Point>{data.progressNum}</Point><SSmallTxt>/{data.chapter}</SSmallTxt></Progress>
                   </ProgressBox>
                   <ProgressBox>
                       <ProgressTitle><Text>진도율</Text></ProgressTitle>
-                      <Progress><Point> {ProgressP}</Point><SmallTxt>%</SmallTxt></Progress>
+                      <Progress><Point>{data.progressPercent}</Point><SSmallTxt>%</SSmallTxt></Progress>
                   </ProgressBox>
               </ProgressWrap>
           </LectureDetailBox>
           <Line/>
           <TabContainer>
               <TabButton active={activeTab === 'tab1'} onPress={() => setActiveTab('tab1')}>
-                <TabText active={activeTab === 'tab1'} onPress={() => setActiveTab('tab1')}>과정목록</TabText>
+                <TabText active={activeTab === 'tab1'}>과정목록</TabText>
               </TabButton>
               <TabButton active={activeTab === 'tab2'} onPress={() => setActiveTab('tab2')}>
-                <TabText active={activeTab === 'tab2'} onPress={() => setActiveTab('tab2')}>학습자료 다운로드</TabText>
+                <TabText active={activeTab === 'tab2'}>학습자료 다운로드</TabText>
               </TabButton>
           </TabContainer>
           <ContentContainer>
             {activeTab === 'tab1' && 
-              ClassData.map((item, index) => (
+              data.chapterInfo.map((item, index) => (
               <ListItem key={index}>
-                <View style={{flexDirection:'row'}}> 
-                    <Num>{item.num}</Num>
-                    <MidTxt>{item.title}</MidTxt>
+                <View style={{flexDirection:'row', width: item[2] === 'Y' ? '65%' : '100%'}}> 
+                    <Num>{index + 1}</Num>
+                    <SmallTxt>{item[0]}</SmallTxt>
                 </View>
-                <View style={{alignItems:'center'}}>
-                    <YellowButton onPress={() => navigation.navigate("LecturePlayer", { ContentsName })}><MidTxt style={{color:'#fff'}}>수강하기</MidTxt></YellowButton>
-                    <Text><MidTxt>{item.progress}</MidTxt><SmallTxt>%</SmallTxt></Text>
-                </View>
+                 <View style={{alignItems:'center'}}>
+                 {item[2] === 'Y' && (
+                    <>
+                      <YellowButton onPress={() => navigation.navigate("LecturePlayer", { ContentsName: item[0] })}>
+                        <SmallTxt style={{color:'#fff'}}>수강하기</SmallTxt>
+                      </YellowButton>
+                      <Text>
+                        <MidTxt>{item[3]}</MidTxt>
+                        <SSmallTxt>%</SSmallTxt>
+                      </Text>
+                    </>
+                  )}
+              </View>
               </ListItem>))
             }
             {activeTab === 'tab2' &&   
-              DownloadData.map((item, index) => (
-              <ListItem key={index}>
+              <ListItem>
                 <View style={{flexDirection:'row'}}> 
-                    <Num>{item.num}</Num>
-                    <MidTxt>{item.title}</MidTxt>
+                    <Num>1</Num>
+                    <SmallTxt>{data.attachFile}</SmallTxt>
                 </View>
                 <View style={{alignItems:'center'}}>
-                    <YellowButton><MidTxt style={{color:'#fff'}}>다운로드</MidTxt></YellowButton>
+                    <YellowButton>
+                      <SmallTxt style={{color:'#fff'}}>다운로드</SmallTxt>
+                    </YellowButton>
                 </View>
-              </ListItem>))}
+              </ListItem>
+            }
           </ContentContainer>
         </Container>
     </View>
   );
 };
-
 
 export default LectureDetail;

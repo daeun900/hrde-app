@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute } from '@react-navigation/native';
 import { Video } from 'expo-av';
 import { AntDesign } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 const Title = styled.Text`
   font-weight: 900;
   background-color: #F8F8F8;
@@ -127,25 +128,21 @@ const LecturePlayer = ({ navigation }) => {
     <View style={{ flex: 1 }}>
       <Title>{ContentsName}</Title>
       <SubTitle>[1차시_어린이집 평가 운영체계]</SubTitle>
-      <Video
-        source={{ uri: 'https://www.hrdeedu.com/contents/DGAI-M/001/01.mp4' }}
+      <WebView
+        source={{ uri: 'https://www.hrdeedu.com/contents/SAFEFB3/003/01/index.html' }}
         style={{ width: '100%', height: 200 }}
-        useNativeControls
-        resizeMode="contain"
-        shouldPlay
-        isLooping
-        onError={(error) => console.log(error)} 
+        scalesPageToFit={true}
+        mediaPlaybackRequiresUserAction={false} // Android에서 필요
+        javaScriptEnabled={true}
+          injectedJavaScript={`
+            const meta = document.createElement('meta');
+            meta.setAttribute('name', 'viewport');
+            meta.setAttribute('content', 'width=device-width user-scalable=yes');
+            document.getElementsByTagName('head')[0].appendChild(meta);
+             const video = document.querySelector('video');
+            if (video) {video.play(); }
+          `}
       />
-      <BtnWrap>
-        <PrevBtn>
-            <AntDesign name="arrowleft" size={20} color="white" />
-            <BtnTxt>이전차시</BtnTxt>
-        </PrevBtn>
-        <NextBtn>
-            <BtnTxt>다음차시</BtnTxt>
-            <AntDesign name="arrowright" size={20} color="white" />
-        </NextBtn>
-      </BtnWrap>
       <View>
         <TabContainer
           data={tabs}

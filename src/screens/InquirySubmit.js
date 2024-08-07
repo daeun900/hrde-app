@@ -1,11 +1,13 @@
-import React, { useEffect, useContext, useState } from "react";
-import { View, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useEffect, useContext, useState, useRef } from "react";
+import { View, StyleSheet, FlatList, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import styled from "styled-components/native";
 import { Button } from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
 import DropDownPicker from 'react-native-dropdown-picker';
-
+import Canvas from 'react-native-canvas';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Container = styled.View`
   padding: 30px;
@@ -48,10 +50,12 @@ const InputContainer = styled.View`
   position: relative;
 `;
 
-const CaptchaImg = styled.Image`
+const CaptchaCanvas = styled(Canvas)`
   position: absolute;
-  top: 34px;
-  left: 20px;
+  top: 24px;
+  left: 10px;
+  width: 150px;
+  height: 50px;
 `;
 
 const InquirySubmit = ({ navigation }) => {
@@ -60,27 +64,135 @@ const InquirySubmit = ({ navigation }) => {
 
   useEffect(() => {
     updateUserNm();
+    getUserId();
   }, []);
 
   const [isFocused, setIsFocused] = useState(false);
   const [captcha, setCaptcha] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-
+  const [userId, setUserId] = useState('');
 
   // selectbox
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
-  const [items, setItems] = useState([
-    { label: '학습내용 문의', value: '학습내용 문의' },
-    { label: '수강관련 문의', value: '수강관련 문의' },
-    { label: '시스템 문의', value: '시스템 문의' },
-  ]);
+  const [items, setItems] = useState([]);
 
+  // captcha
+  const canvasRef = useRef(null);
+  const [randomText, setRandomText] = useState('');
 
-const submit = () => {
-  navigation.navigate("InquiryComplete")
-}
+  //userID추출
+  const getUserId = async () => {
+    try {
+      const idString = await AsyncStorage.getItem('userId');
+      if (idString !== null) {
+        const idObject = JSON.parse(idString);
+        const userId = idObject.value;
+        setUserId(userId);
+      }
+    } catch (error) {
+      console.error('Failed to fetch the user ID:', error);
+    }
+  };
+
+  useEffect(() => {
+    // 문의종류가져오기
+    fetch('https://hrdelms.com/mobileTest/ask_array.php')
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.askArray) {
+          const formattedItems = data.askArray.map(item => ({
+            label: item[1],  // value
+            value: item[0]   // key
+          }));
+          setItems(formattedItems);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching inquiry types:', error);
+      });
+
+    generateRandomText();
+  }, []);
+
+  //캡차이미지생성
+  const generateRandomText = () => {
+    const randomText = Math.floor(Math.random() * 100000).toString().padStart(5, '0'); // 5자리 숫자 생성
+    setRandomText(randomText);
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      drawTextOnCanvas(ctx, randomText);
+    }
+  };
+
+  const handleCanvas = (canvas) => {
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      canvasRef.current = canvas;
+      drawTextOnCanvas(ctx, randomText);
+    }
+  };
+
+  const drawTextOnCanvas = (ctx, text) => {
+    const width = 86;
+    const height = 35;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = 'red';
+    ctx.font = '20px Arial';
+    ctx.fillText(text, 10, 25);
+  };
+
+  //문의제출
+  const submit = () => {
+    if (!value) {
+      Alert.alert('문의 종류 선택', '문의 종류를 선택하세요.');
+      return;
+    }
+  
+    if (!title.trim()) {
+      Alert.alert('문의 제목 입력', '제목을 입력하세요.');
+      return;
+    }
+  
+    if (!content.trim()) {
+      Alert.alert('문의 내용 입력', '내용을 입력하세요.');
+      return;
+    }
+    const name = userNm;
+    //보안코드확인
+    const isPassed = randomText === captcha ? 'Y' : 'N';
+    const pass_code_info = `${randomText}${isPassed}${captcha}`;
+
+    const data = {
+      id: userId,
+      name,
+      pass_code_info,
+      type: value,
+      title,
+      content,
+    };
+
+    console.log(data);
+    axios.post('https://hrdelms.com/mobileTest/ask.php', data)
+      .then((response) => {
+        console.log(response.data.result);
+        if (response.data.result === 'Y') {
+          navigation.navigate("InquiryComplete");
+        } else if (response.data.result === 'N1') {
+          Alert.alert('보안코드 오류', '보안코드를 확인하세요.');
+        } else if (response.data.result === 'N2' || response.data.result === 'N3') {
+          Alert.alert('문의 등록 실패', '문의 등록에 실패했습니다. 관리자에게 문의하세요.');
+        } else {
+          Alert.alert('Submission failed', response.data.result);
+        }
+      })
+      .catch((error) => {
+        console.error('Error submitting inquiry:', error);
+      });
+  };
 
   const renderItem = () => (
     <Container contentContainerStyle={{ paddingBottom: insets.bottom }}>
@@ -91,14 +203,14 @@ const submit = () => {
       <SmallTxt>* 1:1문의는 실시간으로 답변이 불가합니다. 빠른 상담을 원하시는 경우 카카오톡 상담을 이용해주세요</SmallTxt>
       <Label>보안코드</Label>
       <InputContainer>
-        <CaptchaImg source={require('../../assets/76521.png')} />
+        <CaptchaCanvas ref={handleCanvas} />
         <Input
           placeholder="왼쪽의 보안코드를 입력하세요"
           isFocused={isFocused}
           onFocus={() => setIsFocused(true)}
           value={captcha}
           onChangeText={setCaptcha}
-          style={{ paddingLeft: 90 }}
+          style={{ paddingLeft: 100 }}
         />
       </InputContainer>
       <Label>문의종류</Label>
@@ -110,8 +222,8 @@ const submit = () => {
         setValue={setValue}
         setItems={setItems}
         placeholder="문의유형을 선택하세요"
-        containerStyle={{ marginTop: 20, borderColor: '#EEEEEE' }}
-        style={{ paddingHorizontal: 20, paddingVertical: 10, borderColor: '#EEEEEE' }}
+        containerStyle={{ marginTop: 20, borderColor: '#EEEEEE' , zIndex:10 }}
+        style={{ paddingHorizontal: 20, paddingVertical: 10, borderColor: '#EEEEEE'}}
         textStyle={{ fontSize: 16 }}
         placeholderStyle={{ color: '#9a9a9a' }}
         dropDownContainerStyle={{ borderColor: '#EEEEEE', paddingHorizontal: 10 }}
@@ -136,10 +248,11 @@ const submit = () => {
         style={{ height: 200 }}
       />
       <Button title="문의하기"  
-      containerStyle={{borderRadius: 10,marginBottom:20}} 
-      textStyle={{fontSize:16}}  
-      backgroundColor="#008DF3"
-      onPress={() => submit() }/>
+        containerStyle={{borderRadius: 10,marginBottom:20}} 
+        textStyle={{fontSize:16}}  
+        backgroundColor="#008DF3"
+        onPress={submit}
+      />
     </Container>
   );
 

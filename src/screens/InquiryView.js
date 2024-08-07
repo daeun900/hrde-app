@@ -1,10 +1,13 @@
 import React, { useEffect, useContext, useState } from "react";
-import { StyleSheet, Platform, Text, View, Image, Linking, ImageBackground, Alert } from "react-native";
+import { StyleSheet, Platform, Text, View, Image, Linking, ImageBackground, Alert, Dimensions } from "react-native";
 import styled from "styled-components/native";
 import { TopSec } from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
 import { Entypo } from '@expo/vector-icons';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import RenderHTML from 'react-native-render-html';
 
 const Container = styled.ScrollView`
   flex: 1;
@@ -25,6 +28,7 @@ const MidTxt = styled.Text`
 const SmallTxt = styled.Text`
   font-size: 14px;
   line-height: 20px;
+  color: ${({ status }) => (status === '답변완료' ? '#fff' : '#000')};
 `;
 
 const ItemContainer = styled.View``;
@@ -49,6 +53,7 @@ const Status = styled.View`
   border-color: #333;
   border-radius: 6px;
   margin-right: 10px;
+  background-color: ${({ status }) => (status === '답변완료' ? '#000' : 'transparent')};
 `;
 
 const AnswerContainer = styled.View`
@@ -65,34 +70,43 @@ const NullContainer = styled.View`
   justify-content: center;
 `;
 
-const data = [
-  { question: '강의가 안나와요', status: '답변대기', date: '2024. 07. 01', answer: null },
-  { question: '수강신청한 강의가 강의목록에 없네요수강신청한 강의가 강의목록에 없네요', status: '답변완료', date: '2024. 07. 01', answer: '군인은 현역을 면한 후가 아니면 국무위원으로 임명될 수 없다. 정당은 그 목적·조직과 활동이 민주적이어야 하며, 국민의 정치적 의사형성에 참여하는데 필요한 조직을 가져야 한다. 모든 국민은 주거의 자유를 침해받지 아니한다. 의원을 제명하려면 국회재적의원 3분의 2 이상의 찬성이 있어야 한다. 모든 국민은 신속한 재판을 받을 권리를 가진다. 형사피고인은 상당한 이유가 없는 한 지체없이 공개재판을 받을 권리를 가진다.' },
-];
 
-const AccordionItem = ({ question, answer, status, date }) => {
+const AccordionItem = ({ question, answer, status, date, idx  }) => {
   const [expanded, setExpanded] = useState(false);
-
-  //답변대기 시
-  const handlePress = () => {
-    if (answer !== null) {
-      setExpanded(!expanded);
+  const [fetchedAnswer, setFetchedAnswer] = useState("");
+  
+  useEffect(() => {
+    if (expanded) {
+      fetchAnswer();
     }
+  }, [expanded]); //expand가 될때만 실행
+
+  //답변확인
+  const fetchAnswer = async () => {
+      try {
+        const response = await axios.post('https://hrdelms.com/mobileTest/ask_answer.php', { idx });
+        setFetchedAnswer(response.data.answer);
+        console.log(response.data.answer)
+      } catch (error) {
+        console.error('Error fetching answer:', error);
+      }
   };
+
+  const contentWidth = Dimensions.get('window').width;
 
   return (
     <ItemContainer>
-      <QuestionContainer onPress={handlePress} activeOpacity={answer !== null ? 0.8 : 1}>
+      <QuestionContainer onPress={() => setExpanded(!expanded)}  activeOpacity={status === '답변완료' ? 0.8 : 1}>
         <QuestionText>
           <FlexBox>
-            <Status>
-              <SmallTxt>{status}</SmallTxt>
+            <Status status={status}>
+              <SmallTxt status={status}>{status}</SmallTxt>
             </Status>
             <SmallTxt>{date}</SmallTxt>
           </FlexBox>
           <MidTxt>{question}</MidTxt>
         </QuestionText>
-        {answer !== null && (
+        {status === '답변완료' && (
           <Entypo
             name={expanded ? 'chevron-thin-up' : 'chevron-thin-down'}
             size={20}
@@ -101,9 +115,12 @@ const AccordionItem = ({ question, answer, status, date }) => {
         )}
       </QuestionContainer>
 
-      {expanded && answer !== null && (
+      {expanded &&  (
         <AnswerContainer>
-          <MidTxt>{answer}</MidTxt>
+            <RenderHTML 
+            contentWidth={contentWidth} 
+            source={{ html: fetchedAnswer }}
+          />
         </AnswerContainer>
       )}
     </ItemContainer>
@@ -112,7 +129,61 @@ const AccordionItem = ({ question, answer, status, date }) => {
 
 const InquiryView = ({ navigation }) => {
   const insets = useSafeAreaInsets(); // 아이폰 노치 문제 해결
+  const [data, setData] = useState([]);
+  const [userId, setUserId] = useState('');
 
+  //userID추출
+  const getUserId = async () => {
+    try {
+      const idString = await AsyncStorage.getItem('userId');
+      if (idString !== null) {
+        const idObject = JSON.parse(idString);
+        const userId = idObject.value;
+        setUserId(userId);
+      }
+    } catch (error) {
+      console.error('Failed to fetch the user ID:', error);
+    }
+  };
+
+  const statusMap = {
+    'A': '답변대기',
+    'B': '답변완료'
+  };
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.post('https://hrdelms.com/mobileTest/ask_list.php', {
+          id: userId 
+        }, {
+          timeout: 10000 
+        });
+        if (response.data && response.data.askList) {
+          setData(response.data.askList.map(item => ({
+            question: item[0],
+            date: item[1],
+            status: statusMap[item[2]] || 'Unknown',
+            answer: null,
+            idx: item[3]  
+          })));
+        }
+        console.log(userId);
+        console.log(response.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        Alert.alert('Error', 'Unable to fetch data. Please try again later.');
+      }
+    };
+
+    if (userId) {
+      fetchData();
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    getUserId();
+  }, []);
   return (
     <View insets={insets} style={{ flex: 1 }}>
       {data.length === 0 ? (
@@ -129,6 +200,7 @@ const InquiryView = ({ navigation }) => {
               answer={item.answer}
               status={item.status}
               date={item.date}
+              idx={item.idx}
             />
           ))}
         </Container>

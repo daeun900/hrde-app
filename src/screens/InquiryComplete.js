@@ -51,7 +51,7 @@ const InquiryComplete =  ({ navigation }) => {
            containerStyle={{borderRadius: 10, width:200}}
            textStyle={{fontSize:16, color: '#333'}} 
            backgroundColor="#EDEDED"
-           onPress={() =>navigation.navigate('Inquiry', {screen: 'InquiryView'}) }/>
+           onPress={() =>navigation.push('Inquiry', {screen: 'InquiryView'}) }/>
         </Container>
       </View>
   );

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import styled from "styled-components/native";
 import { Text, View, FlatList, TouchableOpacity, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute } from '@react-navigation/native';
 import { Video } from 'expo-av';
 import { AntDesign } from '@expo/vector-icons';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { WebView } from 'react-native-webview';
 const Title = styled.Text`
   font-weight: 900;
@@ -86,17 +87,23 @@ const BtnWrap = styled.View`
   flex-direction: row;
 `
 const PrevBtn = styled.TouchableOpacity`
-  width: 50%;
+  width: 40%;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   padding: 5px 0;
   margin: 15px 0;
-  border-right-width: 1px;
-  border-color: #fff;
+`
+const PlayBtn = styled.TouchableOpacity`
+  width: 20%;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 0;
+  margin: 15px 0;
 `
 const NextBtn = styled.TouchableOpacity`
-  width: 50%;
+  width: 40%;
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -124,11 +131,54 @@ const LecturePlayer = ({ navigation }) => {
     { key: 'tab5', title: '학습활동' }
   ];
 
+    const webviewRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const onPlayButtonPress = () => {
+      if (webviewRef.current) {
+        webviewRef.current.injectJavaScript(`
+          (function() {
+            const playButton = document.querySelector('div._contentsPlayAndStopBtn');
+            if (playButton) {
+              playButton.click();
+            }
+          })();
+        `);
+      }
+      setIsPlaying(!isPlaying);
+    };
+    const onPrevButtonPress = () => {
+      if (webviewRef.current) {
+        webviewRef.current.injectJavaScript(`
+          (function() {
+            const prevButton = document.querySelector('div._prevBtn');
+            if (prevButton) {
+              prevButton.click();
+            }
+          })();
+        `);
+      }
+    };
+  
+    const onNextButtonPress = () => {
+      if (webviewRef.current) {
+        webviewRef.current.injectJavaScript(`
+          (function() {
+            const nextButton = document.querySelector('div._nextBtn');
+            if (nextButton) {
+              nextButton.click();
+            }
+          })();
+        `);
+      }
+    };
+  
   return (
     <View style={{ flex: 1 }}>
       <Title>{ContentsName}</Title>
       <SubTitle>[1차시_어린이집 평가 운영체계]</SubTitle>
       <WebView
+        ref={webviewRef}
         source={{ uri: 'https://www.hrdeedu.com/contents/SAFEFB3/003/01/index.html' }}
         style={{ width: '100%', height: 200 }}
         scalesPageToFit={true}
@@ -143,6 +193,23 @@ const LecturePlayer = ({ navigation }) => {
             if (video) {video.play(); }
           `}
       />
+      <BtnWrap>
+        <PrevBtn onPress={onPrevButtonPress}>
+            <AntDesign name="arrowleft" size={20} color="white" />
+            <BtnTxt>이전차시</BtnTxt>
+        </PrevBtn>
+        <PlayBtn onPress={onPlayButtonPress}>
+          {isPlaying ? (
+            <FontAwesome name="pause" size={24} color="white" />
+          ) : (
+            <FontAwesome name="play" size={24} color="white" />
+          )}
+        </PlayBtn>
+        <NextBtn onPress={onNextButtonPress}>
+            <BtnTxt>다음차시</BtnTxt>
+            <AntDesign name="arrowright" size={20} color="white" />
+        </NextBtn>
+      </BtnWrap>
       <View>
         <TabContainer
           data={tabs}

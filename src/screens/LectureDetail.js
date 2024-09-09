@@ -6,6 +6,7 @@ import { TopSec} from "../components";
 import { UserContext } from "../context/userContext";
 import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Container = styled.ScrollView`
   padding: 25px;
@@ -136,14 +137,32 @@ const LectureDetail = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('tab1');
   const route = useRoute();
   const { Seq  } = route.params; //Seq값 가져오기
-  const [data, setData] = useState(null);
+  const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(''); 
+
+  //userID추출
+  const getUserId = async () => {
+    try {
+      const idString = await AsyncStorage.getItem('userId');
+      if (idString !== null) {
+        const idObject = JSON.parse(idString);
+        const userId = idObject.value;
+        setUserId(userId);
+      }
+      console.log(userId)
+    } catch (error) {
+      console.error('Failed to fetch the user ID:', error);
+    }
+  };
+
+  //학습정보 가져오기
   useEffect(() => {
+    getUserId();
     const fetchLectureDetail = async () => {
       try {
-        const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq });
+        const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq,    id: userId });
         const fetchedData = response.data;
-
         console.log('Fetched Data:', fetchedData); // 데이터 확인
         setData(fetchedData);
       } catch (error) {
@@ -153,8 +172,10 @@ const LectureDetail = ({ navigation }) => {
       }
     };
 
-    fetchLectureDetail();
-  }, [Seq]);
+    if (Seq && userId) {
+      fetchLectureDetail();
+    }
+  }, [Seq, userId]);
 
   if (loading) {
     return (
@@ -225,9 +246,22 @@ const LectureDetail = ({ navigation }) => {
                  <View style={{alignItems:'center'}}>
                  {item[2] === 'Y' && (
                     <>
-                      <YellowButton onPress={() => navigation.navigate("LecturePlayer", { ContentsName: item[0] })}>
-                        <SmallTxt style={{color:'#fff'}}>수강하기</SmallTxt>
-                      </YellowButton>
+                     <YellowButton 
+                        onPress={() => {
+                          const returnData = data.returnBack[index];
+                          navigation.navigate("LecturePlayer", { 
+                            LectureCode: returnData[0], 
+                            StudySeq: returnData[1], 
+                            ChapterSeq: returnData[2], 
+                            ContentsIdx: returnData[3], 
+                            ProgressIdx: returnData[4], 
+                            PlayMode: returnData[5], 
+                            ProgressStep: returnData[6] 
+                          });
+                        }}
+                      >
+                      <SmallTxt style={{color:'#fff'}}>수강하기</SmallTxt>
+                    </YellowButton>
                       <Text>
                         <MidTxt>{item[3]}</MidTxt>
                         <SSmallTxt>%</SSmallTxt>

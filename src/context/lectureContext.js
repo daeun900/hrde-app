@@ -6,33 +6,35 @@ const LectureContext = createContext();
 
 export const LectureProvider = ({ children }) => {
   const [lectures, setLectures] = useState([]);
+  const [progressP, setProgressP] = useState(null); // State to track ProgressP
 
   const fetchLectureData = async () => {
     try {
       const userIdSession = await AsyncStorage.getItem('userId');
       const userData = JSON.parse(userIdSession);
       if (userData && userData.value) {
-        const userId = userData.value; // 아이디 추출
+        const userId = userData.value;
         console.log('userId 값 ---->', userId);
         const response = await axios.post("https://hrdelms.com/mobileTest/lecture_list.php", { id: userId });
 
-        // 서버 응답 형식 확인
         console.log('Server response:', response.data);
         
         const lectureList = response.data.data;
 
-        
-
-        // 배열 내의 객체들을 상태로 설정
-        const formattedLectureList = lectureList.map((lecture, index) => ({
-          id: index.toString(),
-          ContentsName: lecture[0], //강의제목
-          ProgressStep: lecture[1], //현재 차시 진행 상태
-          ProgressNum: lecture[2], //현재강의차시번호
-          Chapter: lecture[3], //총차시수
-          ProgressP: lecture[4], //현재진도율,
-          Seq:lecture[5]
-        }));
+        const formattedLectureList = lectureList.map((lecture, index) => {
+          if (progressP !== null) { // Update ProgressP if it's different
+            setProgressP(lecture[4]); // Set ProgressP from the fetched data
+          }
+          return {
+            id: index.toString(),
+            ContentsName: lecture[0],
+            ProgressStep: lecture[1],
+            ProgressNum: lecture[2],
+            Chapter: lecture[3],
+            ProgressP: lecture[4],
+            Seq: lecture[5]
+          };
+        });
 
         setLectures(formattedLectureList);
       }
@@ -47,11 +49,10 @@ export const LectureProvider = ({ children }) => {
 
   useEffect(() => {
     fetchLectureData();
-  }, []);
-
+  }, [progressP]); // Dependency on progressP
 
   return (
-    <LectureContext.Provider value={{ lectures, fetchLectureData, clearLectures }}>
+    <LectureContext.Provider value={{ lectures, fetchLectureData, clearLectures, progressP }}>
       {children}
     </LectureContext.Provider>
   );

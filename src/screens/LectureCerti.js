@@ -1,6 +1,6 @@
-import React, { useContext, useState, useRef }  from "react";
+import React, { useContext, useState, useRef, useEffect }  from "react";
 import styled from "styled-components/native";
-import { Text, View, Image, Alert} from "react-native";
+import { BackHandler, Text, View, Image, Alert} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
@@ -8,6 +8,23 @@ import axios from 'axios';
 import { parseString } from 'react-native-xml2js';
 
 const LectureCerti = ({ navigation }) => {
+
+  useEffect(() => {
+    // 뒤로 가기 버튼 핸들러 등록
+    const backAction = () => {
+      // 여기서 뒤로 가기 버튼을 막음
+      Alert.alert("뒤로가기 불가", "이 화면에서는 뒤로 가기를 할 수 없습니다.");
+      return true; // 뒤로 가기를 차단
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove(); // 컴포넌트가 언마운트될 때 핸들러 제거
+  }, []);
+
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
   const route = useRoute();
   const {

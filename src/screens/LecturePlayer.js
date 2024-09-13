@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components/native";
-import { Text, View, FlatList, TouchableOpacity, ScrollView, TextInput, Dimensions, Alert } from "react-native";
+import { Text, View, FlatList, TouchableOpacity, ScrollView, Dimensions, Alert, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-import { Video } from 'expo-av';
 import { AntDesign } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { WebView } from 'react-native-webview';
@@ -110,6 +109,7 @@ const LecturePlayer = () => {
   const route = useRoute();
   const { LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, ProgressStep } = route.params; //학습정보 가져오기
   const [activeTab, setActiveTab] = useState('tab1');
+  const [loading, setLoading] = useState(true); 
 
   const tabs = [
     { key: 'tab1', title: '학습시간' },
@@ -129,6 +129,9 @@ const LecturePlayer = () => {
   const [contentsDetailSeq, setContentsDetailSeq] = useState('');
   const [completeTime, setCompleteTime] = useState('');
   const [playPath, setPlayPath] = useState('');
+
+  // const [needMobileAuth, setNeedMobileAuth] = useState('');
+  // const [needMobileAuth2, setNeedMobileAuth2] = useState('');
 
   const webviewRef = useRef(null);
   const [userId, setUserId] = useState(''); 
@@ -159,15 +162,20 @@ const LecturePlayer = () => {
   useEffect(() => { 
     getUserId();
     const fetchData = async () => { 
+      if (!userId) return;  // userId가 없으면 fetchData 실행하지 않음
       try {
+        const modifiedProgressStep = ProgressStep.replace('차시', ''); // "차시" 제거
+
         const response = await axios.post('https://hrdelms.com/mobileTest/player.php', {
+          id: userId,
           lectureCode: LectureCode,
           studySeq: StudySeq,
           chapterSeq: ChapterSeq,
           contentsIdx: ContentsIdx,
           playMode: PlayMode,
-          progressStep: ProgressStep
+          progressStep: modifiedProgressStep
         });
+        console.log('Player 보낸 데이터:', userId, LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, modifiedProgressStep)
 
         const data = response.data;
         setContentsName(data.contentsName); //과정명
@@ -182,8 +190,14 @@ const LecturePlayer = () => {
         setCompleteTime(data.completeTime); // completeTime
         setStudyTime(data.studyTime);
 
+        // setNeedMobileAuth(data.needMobileAuth);
+        // setNeedMobileAuth2(data.needMobileAuth2);
+        
+        console.log('Player 받은 데이터:', response.data)
+        setTimeout(() => {
+
       // PlayURL 로직
-      if (!data.lastStudy) {
+      if (data.lastStudy ===  '0') {
         // lastStudy가 빈 값이면 playPath를 저장
         setPlayURL(data.playPath);
       } else {
@@ -191,50 +205,99 @@ const LecturePlayer = () => {
         setPlayURL(`https://hrdelms.com${data.lastStudy}`);
       }
 
-           // 본인인증 관련 로직
-           if (data.needMobileAuth === 'Y') {
-            Alert.alert(
-              '본인인증 필요', 
-              '과정입과 시 본인인증이 필요합니다.', 
-              [
-                { text: '확인', onPress: () => navigation.navigate('LectureCerti',  { ContentsName: ContentsName }) } // 본인인증 페이지로 이동
-              ],
-              { cancelable: false }
-            );
-          } else if (data.needMobileAuth2 === 'Y') {
-            Alert.alert(
-              '본인인증 필요', 
-              '학습 진행 시 본인인증이 필요합니다.', 
-              [
-                { text: '확인', onPress: () => navigation.navigate('LectureCerti',  { ContentsName: ContentsName }) } // 본인인증 페이지로 이동
-              ],
-              { cancelable: false }
-            );
-          }
-  
-          // 차시 수강 제한 경고
-      if (data.alert === 'over8Chapters') {
-        Alert.alert(
-          '경고', 
-          '하루 8개 차시까지만 수강이 가능합니다.', 
-          [
-            { text: '확인', onPress: () => navigation.goBack() } // 확인 버튼 누르면 이전 페이지로 이동
-          ],
-          { cancelable: false }
-        );
-      }
+        // 본인인증 관련 로직
+        if (data.needMobileAuth === 'Y') {
+          Alert.alert(
+            '본인인증 필요', 
+            '과정입과 시 본인인증이 필요합니다.', 
+            [
+              { text: '확인', onPress: () => navigation.navigate('LectureCerti', { 
+                Id: userId,
+                LectureCode: LectureCode,
+                StudySeq: StudySeq,
+                ChapterSeq: ChapterSeq,
+                ContentsIdx: ContentsIdx,
+                PlayMode: PlayMode,
+                ProgressStep: modifiedProgressStep,
+
+                ContentsName: data.contentsName, 
+                UserName: data.name,  
+                UserMobile: data.userMobile,
+                SessionId: data.sessionId, 
+                AgtId: data.captcha_agent_id, 
+                SessionId: data.sessionId, 
+                UserIp: data.userIP, 
+                LectureTermeIdx: data.lectureTermeIdx,
+                EvalCd: data.evalCd,
+                EvalType: data.evalType,
+                ChapterNumberZero: data.chapterNumberZero,
+
+                TrnId:data.trnID
+              }) }
+            ],
+            { cancelable: false }
+          );
+        } else if (data.needMobileAuth2 === "Y") {
+   
+          Alert.alert(
+            '본인인증 필요', 
+            '학습 진행 시 본인인증이 필요합니다.', 
+            [
+              { text: '확인', onPress: () => navigation.navigate('LectureCerti', { 
+                Id: userId,
+                LectureCode: LectureCode,
+                StudySeq: StudySeq,
+                ChapterSeq: ChapterSeq,
+                ContentsIdx: ContentsIdx,
+                PlayMode: PlayMode,
+                ProgressStep: modifiedProgressStep,
+
+                ContentsName: data.contentsName, 
+                UserName: data.name,  
+                UserMobile: data.userMobile,
+                SessionId: data.sessionId, 
+                AgtId: data.captcha_agent_id, 
+                UserIp: data.userIP, 
+                LectureTermeIdx: data.lectureTermeIdx,
+                EvalCd: data.evalCd,
+                EvalType: data.evalType,
+                ChapterNumberZero: data.chapterNumberZero,
+
+                ChapterNum: data.chapterNum
+               }) }
+            ],
+            { cancelable: false }
+          );
+        }
+
+        // 차시 수강 제한 경고
+        if (data.alert === 'over8Chapters') {
+          Alert.alert(
+            '경고', 
+            '하루 8개 차시까지만 수강이 가능합니다.', 
+            [
+              { text: '확인', onPress: () => navigation.goBack() } 
+            ],
+            { cancelable: false }
+          );
+        }
+      }, 300);
 
         console.log('Video URL:', data.playPath)
         console.log('Study Time:', data.studyTime)
         console.log('Last Study:', data.lastStudy)
         console.log('Video URL:', playURL)
+
+        setLoading(false);
+
       } catch (error) {
         console.error('Error fetching data:', error);
+        setLoading(true);
       } 
     };
 
     fetchData();
-  }, [LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, ProgressStep]);
+  }, [userId, LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, ProgressStep]);
 
 
 //학습시간 체크
@@ -376,6 +439,12 @@ const LecturePlayer = () => {
 
   return (
     <View style={{ flex: 1 }}>
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        ) : (
+        <>
       <Title>[{ContentsName}]</Title>
       <SubTitle>[{contentsTitle}]</SubTitle>
       <WebView
@@ -476,6 +545,8 @@ const LecturePlayer = () => {
           </Detail>
         </ContentContainer>
       </ScrollView>
+      </>
+      )}
     </View>
   );
 };

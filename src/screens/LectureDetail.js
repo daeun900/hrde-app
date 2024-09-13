@@ -163,7 +163,7 @@ const LectureDetail = ({ navigation }) => {
       try {
         const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq,    id: userId });
         const fetchedData = response.data;
-        console.log('Fetched Data:', fetchedData); // 데이터 확인
+        console.log('Lecture Detail 받은 데이터:', fetchedData); // 데이터 확인
         setData(fetchedData);
       } catch (error) {
         console.error(error);
@@ -254,7 +254,7 @@ const LectureDetail = ({ navigation }) => {
                             StudySeq: returnData[1], 
                             ChapterSeq: returnData[2], 
                             ContentsIdx: returnData[3], 
-                            ProgressIdx: returnData[4], 
+                            // ProgressIdx: returnData[4], 
                             PlayMode: returnData[5], 
                             ProgressStep: returnData[6] 
                           });

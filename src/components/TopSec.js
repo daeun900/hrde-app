@@ -105,10 +105,10 @@ const TopSec = ({ name, borderBottomWidth }) => {
         <LogoutBtn onPress={confirmLogout}>
           <MaterialIcons name="logout" size={24} color="black" />
         </LogoutBtn>
-        <NoticeBtn onPress={() => navigation.navigate("Notification")}>
+        {/* <NoticeBtn onPress={() => navigation.navigate("Notification")}>
           <Octicons name="bell" size={24} color="black" />
           <On />
-        </NoticeBtn>
+        </NoticeBtn> */}
       </BtnWrap>
     </TopTxt>
   );

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from "../context/userContext";
+import { useLectureContext } from "../context/lectureContext";
 
 const Container = styled.ScrollView`
   padding: 0 20px;
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
 
 
 const Home =  ({ navigation }) => {
-
+  const { lectures } = useLectureContext(lectures);
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
   const data = [{image: require('../../assets/banner1.png'),},{image: require('../../assets/banner2.png'),},{image: require('../../assets/banner3.png'),}]
   const {width} = useWindowDimensions();
@@ -138,7 +139,7 @@ const Home =  ({ navigation }) => {
               </FlexBox>
               <View style={{width:'100%', backgroundColor:'#rgba(255,255,255,.5)', paddingVertical: 13, borderRadius: 26}}>
                   <SmallTxt style={{textAlign:'center'}}>
-                    회원님은 총 <Text style={{color:'#008DF3'}}>3개</Text>의 과정을 수강하고 있습니다.
+                    회원님은 총 <Text style={{color:'#008DF3'}}>{lectures.length}개</Text>의 과정을 수강하고 있습니다.
                   </SmallTxt>
               </View>
             </LectureBox>

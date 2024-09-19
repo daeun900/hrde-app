@@ -1,7 +1,7 @@
-import React, { useEffect , useContext} from "react";
+import React, { useEffect , useContext, useState} from "react";
 import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ScrollView} from "react-native";
 import styled from "styled-components/native";
-import { TopSec, Carousel} from "../components";
+import { TopSec, Carousel, ImageSliderModal} from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -103,7 +103,11 @@ const Home =  ({ navigation }) => {
   const data = [{image: require('../../assets/banner1.png'),},{image: require('../../assets/banner2.png'),},{image: require('../../assets/banner3.png'),}]
   const {width} = useWindowDimensions();
   const { userNm, updateUserNm  } = useContext(UserContext);
+  const [isModalVisible, setModalVisible] = useState(false);
 
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
   useEffect(() => {
     updateUserNm();
@@ -139,7 +143,7 @@ const Home =  ({ navigation }) => {
               </View>
             </LectureBox>
           <GridBtn>
-            <SmallButton style={styles.shadow} activeOpacity={.8}>
+            <SmallButton style={styles.shadow} activeOpacity={.8}  onPress={toggleModal}>
                 <Image source={require('../../assets/main_icon1.png')}/>
                 <MidTxt>앱 사용방법</MidTxt>
             </SmallButton>
@@ -159,6 +163,7 @@ const Home =  ({ navigation }) => {
               <MaterialIcons name="arrow-forward-ios" size={18} color="black" />
           </BigButton>
         </Container>
+        <ImageSliderModal isVisible={isModalVisible} onClose={toggleModal} />
        
       </View>
       </ImageBackground>

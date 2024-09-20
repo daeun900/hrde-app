@@ -1,7 +1,7 @@
-import React, { useEffect , useContext} from "react";
+import React, { useEffect , useContext, useState} from "react";
 import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ScrollView} from "react-native";
 import styled from "styled-components/native";
-import { TopSec} from "../components";
+import { TopSec, ImageSliderModal} from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
 
@@ -68,7 +68,11 @@ const styles = StyleSheet.create({
 const Etc =  ({ navigation }) => {
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
   const { userNm, updateUserNm  } = useContext(UserContext);
+  const [isModalVisible, setModalVisible] = useState(false);
 
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
   useEffect(() => {
     updateUserNm();
@@ -101,7 +105,7 @@ const Etc =  ({ navigation }) => {
                 <SmallTxt>궁금한 부분의 답변을 찾아보세요</SmallTxt>
               </View>
            </Button>
-           <Button style={styles.shadow}>
+           <Button style={styles.shadow} onPress={toggleModal}>
               <ImgWrap><Image source={require('../../assets/etcicon3.png')}/></ImgWrap>
               <View>
                 <MidTxt>앱 가이드</MidTxt>
@@ -109,6 +113,7 @@ const Etc =  ({ navigation }) => {
               </View>
            </Button>
         </Container>
+        <ImageSliderModal isVisible={isModalVisible} onClose={toggleModal} />
       </View>
       </ImageBackground>
   );

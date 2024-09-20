@@ -80,7 +80,7 @@ const AIcon = styled.View`
   justify-content: center;
   align-items: center;
   position: absolute;
-  top: 20px;
+  top: 30px;
   left: 20px;
 `
 const NullContainer = styled.View`

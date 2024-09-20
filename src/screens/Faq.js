@@ -113,7 +113,7 @@ const Faq =  ({ navigation }) => {
         <TopSec name={userNm}/>
         <Container contentContainerStyle={{ paddingBottom: insets.bottom}}>
           <SearchContainer>
-            <Fontisto name="search" size={24} color="black" style={{position:'absolute',top:25,left:20, zIndex:10}} />
+            <Fontisto name="search" size={24} color="black" style={{position:'absolute',top:30,left:20, zIndex:10}} />
             <Input
               placeholder="궁금한 것을 빠르게 검색해보세요"
               value={search}

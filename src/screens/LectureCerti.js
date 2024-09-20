@@ -1,6 +1,7 @@
-import React, { useContext, useState, useRef, useEffect }  from "react";
+import React, { useContext, useState, useRef, useEffect, useCallback }  from "react";
+import { useFocusEffect } from '@react-navigation/native';
 import styled from "styled-components/native";
-import { BackHandler, Text, View, Image, Alert} from "react-native";
+import { BackHandler, Text, View, Image, Alert, Platform} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
@@ -12,7 +13,6 @@ const LectureCerti = ({ navigation }) => {
   useEffect(() => {
     // 뒤로 가기 버튼 핸들러 등록
     const backAction = () => {
-      // 여기서 뒤로 가기 버튼을 막음
       Alert.alert("뒤로가기 불가", "이 화면에서는 뒤로 가기를 할 수 없습니다.");
       return true; // 뒤로 가기를 차단
     };
@@ -158,7 +158,7 @@ const LectureCerti = ({ navigation }) => {
   
   const [encData, setEncData] = useState(null);
   const [webviewVisible, setWebviewVisible] = useState(false);
-  
+ 
   //휴대폰 인증
   const getEncData = async () => {
     try {
@@ -171,6 +171,17 @@ const LectureCerti = ({ navigation }) => {
       console.error('Error fetching enc data:', error);
     }
   };
+  useFocusEffect(
+    useCallback(() => {
+      // 화면이 포커스 되었을 때 탭바 숨기기
+      navigation.getParent()?.setOptions({ tabBarStyle: { display: webviewVisible ? 'none' : 'flex' } });
+
+      return () => {
+        // 화면이 벗어날 때 탭바 다시 표시
+        navigation.getParent()?.setOptions({ tabBarStyle: { display: 'flex' } });
+      };
+    }, [webviewVisible, navigation])
+  );
 
   // XML 파싱을 Promise로 변환
   const parseXml = (xmlData) => {
@@ -356,6 +367,30 @@ const Num = styled.Text`
     left:0;
     font-size: 16px;
 `
+
+const CloseButton = styled.TouchableOpacity`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 5px;
+`;
+
+const ButtonText = styled.Text`
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+`;
+const webViewSource = {
+  uri: 'https://nice.checkplus.co.kr/CheckPlusSafeModel/checkplus.cb',
+  method: 'POST',
+  body: `m=checkplusService&EncodeData=${encData}`,
+};
+
+if (Platform.OS === 'ios') {
+  webViewSource.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };  // iOS에서만 헤더 추가
+}
   return (
     
     <View insets={insets} style={{flex:1}}>
@@ -374,7 +409,7 @@ const Num = styled.Text`
                  maxLength={6}
                  keyboardType={"numeric"}>
                 </Input>
-                <SubmitBtn><MidTxt style={{color:'#fff'}} onPress={handleOtpSubmit}>인증하기</MidTxt></SubmitBtn>
+                <SubmitBtn onPress={handleOtpSubmit}><MidTxt style={{color:'#fff'}}>인증하기</MidTxt></SubmitBtn>
             </InputWrap>
             <SmallTxt>*mOTP외 다른 방법을 원하시는 분은 아래 대체인증을 눌러주세요</SmallTxt>
             <ButtonWrap>
@@ -393,29 +428,31 @@ const Num = styled.Text`
        </Container>
        </>
         ) : (
-        <WebView
-        source={{
-          uri: 'https://nice.checkplus.co.kr/CheckPlusSafeModel/checkplus.cb',
-          method: 'POST',
-          body: `m=checkplusSerivce&EncodeData=${encData}`,  // 서버에서 받은 암호화된 데이터 전송
-        }}
-        onNavigationStateChange={(event) => {
-          //console.log('test1')
-          if (event.url.includes('checkplus_success')) {
-            // 성공 페이지 도달 시 처리
-            alert('인증 성공');
-            setWebviewVisible(false);  // 인증 완료 후 WebView 닫기
-
-            handleMobileSubmit();
-            //console.log('test2')
-          } else if (event.url.includes('checkplus_fail')) {
-            // 실패 페이지 도달 시 처리
-            alert('인증 실패');
-            setWebviewVisible(false);  // 인증 실패 시 WebView 닫기
-            //console.log('test3')
-          }
-        }}
-      />
+          <>
+          <WebView
+            key={encData}  // encodeData를 키로 설정하여 변경 시 리렌더링
+            source={webViewSource}
+            onNavigationStateChange={(event) => {
+              //console.log('test1')
+              if (event.url.includes('checkplus_success')) {
+                // 성공 페이지 도달 시 처리
+                alert('인증 성공');
+                setWebviewVisible(false);  // 인증 완료 후 WebView 닫기
+    
+                handleMobileSubmit();
+                //console.log('test2')
+              } else if (event.url.includes('checkplus_fail')) {
+                // 실패 페이지 도달 시 처리
+                alert('인증 실패');
+                setWebviewVisible(false);  // 인증 실패 시 WebView 닫기
+                //console.log('test3')
+              }
+            }}
+          />
+          <CloseButton onPress={() => setWebviewVisible(false)}>
+            <ButtonText>닫기</ButtonText>
+          </CloseButton>
+       </>
       )}
     </View>
   );

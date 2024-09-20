@@ -214,7 +214,12 @@ const LectureDetail = ({ navigation }) => {
               <ProgressWrap>
                   <ProgressBox style={{width: '40%'}}>
                       <ProgressTitle><Text>현재 진행상태</Text></ProgressTitle>
-                      <Progress style={{flexDirection:'column'}}><Point>{data.classNum}</Point><SSmallTxt style={{color: '#767676'}}>({data.classStatus})</SSmallTxt></Progress>
+                      <Progress style={{flexDirection:'column'}}>
+                        <Point>{data.classNum}</Point>
+                        <SSmallTxt style={{color: '#767676'}}>
+                          {data.classStatus.replace(/<br\s*\/?>/gi, ' ')}
+                        </SSmallTxt>
+                      </Progress>
                   </ProgressBox>
                   <ProgressBox>
                       <ProgressTitle><Text>강의진도</Text></ProgressTitle>

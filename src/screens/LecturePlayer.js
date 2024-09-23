@@ -202,7 +202,7 @@ const LecturePlayer = () => {
         setPlayURL(data.playPath);
       } else {
         // lastStudy 값이 있으면 앞에 'https://hrdelms.com'을 붙여서 저장
-        setPlayURL(`https://hrdelms.com${data.lastStudy}`);
+        setPlayURL(`https://hrdelms.com/contents/${data.lastStudy}`);
       }
 
         // 본인인증 관련 로직
@@ -431,7 +431,7 @@ const LecturePlayer = () => {
     //차시변경 상태관리
     const handleNavigationStateChange = (navState) => {
       const newUrl = navState.url;//현재 url 저장
-      const trimmedUrl = newUrl.replace('https://hrdelms.com', ''); //필요한 부분만 추출
+      const trimmedUrl = newUrl.replace('https://hrdelms.com/contents/', ''); //필요한 부분만 추출
 
       setLastStudy(trimmedUrl);
     };

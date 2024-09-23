@@ -1,5 +1,5 @@
 import React, { useEffect , useContext, useState} from "react";
-import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ScrollView} from "react-native";
+import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ScrollView, BackHandler, Alert} from "react-native";
 import styled from "styled-components/native";
 import { TopSec, Carousel, ImageSliderModal} from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -109,6 +109,55 @@ const Home =  ({ navigation }) => {
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
   };
+  const confirmLogout = () => {
+    Alert.alert(
+      '로그아웃',
+      '로그아웃 하시겠습니까?',
+      [
+        {
+          text: '취소',
+          onPress: () => console.log('로그아웃 취소'),
+          style: 'cancel',
+        },
+        {
+          text: '확인',
+          onPress: removeData,
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+  const { clearLectures } = useLectureContext();
+  const removeData = async () => {
+    try {
+      await AsyncStorage.removeItem('userNm');
+      await AsyncStorage.removeItem('userId');
+      console.log('Data removed');
+      console.log('로그아웃 진행 후 userNm 값 : ', await AsyncStorage.getItem('userNm'));
+      console.log('로그아웃 진행 후 userId 값 : ', await AsyncStorage.getItem('userId'));
+      clearLectures(); // Clear lectures if needed
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Start' }]
+      });
+    } catch (error) {
+      console.error('Error removing data:', error);
+    }
+  };
+
+  useEffect(() => {
+    const backAction = () => {
+      confirmLogout();
+      return true; // Prevents the default back button behavior
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove(); // Cleanup the event listener when the component is unmounted
+  }, []);
 
   useEffect(() => {
     updateUserNm();

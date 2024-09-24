@@ -1,7 +1,7 @@
 import React, { useContext, useState, useRef, useEffect, useCallback }  from "react";
 import { useFocusEffect } from '@react-navigation/native';
 import styled from "styled-components/native";
-import { BackHandler, Text, View, Image, Alert, Platform} from "react-native";
+import { BackHandler, Text, View, Image, Alert, Platform, Linking} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
@@ -161,6 +161,12 @@ const LectureCerti = ({ navigation }) => {
  
   //휴대폰 인증
   const getEncData = async () => {
+    if (Platform.OS === 'ios') {
+      Alert.alert("휴대폰 본인인증", "휴대폰 인증은 본인명의 휴대폰만 인증 가능합니다.");
+    } else {
+      Alert.alert("휴대폰 본인인증", "휴대폰 인증은 본인명의 휴대폰만 인증 가능합니다. [문자(SMS)인증] 이용 바랍니다. ");
+    }
+
     try {
       const response = await axios.post('https://hrdelms.com/mobileTest/create_encoded_data.php', {
         lectureCode: LectureCode
@@ -388,9 +394,28 @@ const webViewSource = {
   body: `m=checkplusService&EncodeData=${encData}`,
 };
 
+const handleIntentUrl = async (url) => {
+  console.log(url);
+  try {
+    const canOpen = await Linking.canOpenURL(url);
+    console.log(`Can open: ${canOpen}`); // 추가 로그
+    if (canOpen) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert('앱을 열 수 없습니다.', '해당 앱이 설치되어 있지 않거나 URL 형식이 잘못되었습니다.');
+    }
+  } catch (err) {
+    console.error('앱을 여는 중 오류 발생:', err);
+    Alert.alert('오류 발생', '앱을 여는 도중 오류가 발생했습니다.');
+  }
+};
+
+
 if (Platform.OS === 'ios') {
   webViewSource.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };  // iOS에서만 헤더 추가
 }
+
+
   return (
     
     <View insets={insets} style={{flex:1}}>
@@ -429,26 +454,35 @@ if (Platform.OS === 'ios') {
        </>
         ) : (
           <>
-          <WebView
-            key={encData}  // encodeData를 키로 설정하여 변경 시 리렌더링
-            source={webViewSource}
-            onNavigationStateChange={(event) => {
-              //console.log('test1')
-              if (event.url.includes('checkplus_success')) {
-                // 성공 페이지 도달 시 처리
-                alert('인증 성공');
-                setWebviewVisible(false);  // 인증 완료 후 WebView 닫기
-    
-                handleMobileSubmit();
-                //console.log('test2')
-              } else if (event.url.includes('checkplus_fail')) {
-                // 실패 페이지 도달 시 처리
-                alert('인증 실패');
-                setWebviewVisible(false);  // 인증 실패 시 WebView 닫기
-                //console.log('test3')
-              }
-            }}
-          />
+        <WebView
+          key={encData}
+          source={webViewSource}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          allowFileAccess={true}
+          androidHardwareAccelerationDisabled={true}  
+          setSupportMultipleWindows={false}
+          originWhitelist={['*']}
+          onNavigationStateChange={(event) => {
+            console.log('Navigated to URL:', event.url);
+            if (event.url.includes('checkplus_success')) {
+              alert('인증 성공');
+              setWebviewVisible(false);
+              handleMobileSubmit();
+            } else if (event.url.includes('checkplus_fail')) {
+              alert('인증 실패');
+              setWebviewVisible(false);
+            }
+          }}
+          onShouldStartLoadWithRequest={(event) => {
+            console.log('test'); // 이 부분이 Android에서 출력되는지 확인
+            if (event.url.startsWith("intent:")) {
+              handleIntentUrl(event.url);
+              return false;
+            }
+            return true;
+          }}
+        />
           <CloseButton onPress={() => setWebviewVisible(false)}>
             <ButtonText>닫기</ButtonText>
           </CloseButton>

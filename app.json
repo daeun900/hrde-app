@@ -20,7 +20,17 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.daeun900.hrdeapp",
-        "softwareKeyboardLayoutMode": "pan"
+        "softwareKeyboardLayoutMode": "pan",
+        "intentFilters": [
+          {
+            "action": "VIEW",
+            "category": ["LAUNCHER","BROWSABLE", "DEFAULT"],
+            "data": {
+              "scheme": "intent"
+            }
+          }
+        ],
+        "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -287,7 +287,18 @@ const downloadHwpFile = async (fileName) => {
               <ListItem key={index}>
                 <View style={{flexDirection:'row', width: item[2] === 'Y' ? '65%' : '100%'}}> 
                     <Num>{index + 1}</Num>
+                    {item[1] === 'A' && (
                     <SmallTxt>{item[0]}</SmallTxt>
+                   )}
+                    {item[1] === 'B' && (
+                      <SmallTxt style={{ color: '#FF5733' }}>중간평가는 PC에서 가능합니다.</SmallTxt>
+                    )}
+                    {item[1] === 'C' && (
+                      <SmallTxt style={{ color: '#FF5733' }}>최종평가는 PC에서 가능합니다.</SmallTxt>
+                    )}
+                    {item[1] === 'D' && (
+                      <SmallTxt style={{ color: '#FF5733' }}>과제는 PC에서 가능합니다.</SmallTxt>
+                    )}
                 </View>
                  <View style={{alignItems:'center'}}>
                  {item[2] === 'Y' && (
@@ -314,7 +325,9 @@ const downloadHwpFile = async (fileName) => {
                       </Text>
                     </>
                   )}
-              </View>
+          
+           
+                  </View>
               </ListItem>))
             }
             {activeTab === 'tab2' &&   

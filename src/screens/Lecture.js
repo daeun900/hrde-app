@@ -1,10 +1,11 @@
-import React,{useEffect, useState, useContext}from "react";
+import React,{useEffect, useState, useContext, useCallback}from "react";
 import styled from "styled-components/native";
 import { StyleSheet, Platform,View, FlatList, ActivityIndicator,Image} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TopSec} from "../components";
 import { useLectureContext } from "../context/lectureContext";
 import { UserContext } from "../context/userContext";
+import { useFocusEffect } from '@react-navigation/native';
 
 const Container = styled.ScrollView`
   background-color: #F8F8F8 ;
@@ -91,6 +92,12 @@ const LectureList = ({ navigation }) => {
     fetchLectureData();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchLectureData();
+    }, [])
+  );
+  
   if (!lectures.length) {
     return (
       <NullContainer>

@@ -1,10 +1,10 @@
-import React, { useContext, useState, useEffect }  from "react";
+import React, { useContext, useState, useEffect, useCallback }  from "react";
 import styled from "styled-components/native";
 import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TopSec} from "../components";
 import { UserContext } from "../context/userContext";
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -156,26 +156,31 @@ const LectureDetail = ({ navigation }) => {
     }
   };
 
-  //학습정보 가져오기
-  useEffect(() => {
-    getUserId();
-    const fetchLectureDetail = async () => {
-      try {
-        const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq,    id: userId });
-        const fetchedData = response.data;
-        console.log('Lecture Detail 받은 데이터:', fetchedData); // 데이터 확인
-        setData(fetchedData);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+ // 학습정보 가져오기 함수
+ const fetchLectureDetail = async () => {
+  try {
+    const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq, id: userId });
+    const fetchedData = response.data;
+    console.log('Lecture Detail 받은 데이터:', fetchedData); // 데이터 확인
+    setData(fetchedData);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    if (Seq && userId) {
+useEffect(() => {
+  getUserId();
+}, []);
+
+// 페이지 포커스 될 때마다 데이터 갱신
+useFocusEffect(
+  useCallback(() => {
+      setLoading(true); // 로딩 상태를 true로 설정
       fetchLectureDetail();
-    }
-  }, [Seq, userId]);
+  }, [])
+);
 
   if (loading) {
     return (

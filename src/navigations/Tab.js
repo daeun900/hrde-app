@@ -32,6 +32,7 @@ const TabNav = () => {
                       marginBottom: 15,  // 안드로이드에서만 적용
                     },
                   }),
+                  tabBarAdaptive: true,  // 안드로이드에서 높이 계산 문제 방지
             }}
         >
             <Tab.Screen name="Home" component={Home} 
@@ -60,6 +61,11 @@ const TabNav = () => {
                     tabBarIcon: ({ focused }) =>
                         TabIcon({
                             name: focused ? 'user' : 'user', focused
+                        }),
+                        tabBarStyle: Platform.select({
+                            android: {
+                                height: 90
+                            }
                         }),
                 }}
             />

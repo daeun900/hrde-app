@@ -7,6 +7,8 @@ import { UserContext } from "../context/userContext";
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const Container = styled.ScrollView`
   padding: 25px;
@@ -140,7 +142,8 @@ const LectureDetail = ({ navigation }) => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(''); 
-
+  const [downloadUri, setDownloadUri] = useState(null);
+  const [downloadProgress, setDownloadProgress] = useState(null);
   //userID추출
   const getUserId = async () => {
     try {
@@ -181,6 +184,39 @@ useFocusEffect(
       fetchLectureDetail();
   }, [])
 );
+
+const downloadHwpFile = async (fileName) => {
+  console.log('test')
+  const uri = 'https://hrdelms.com/upload/Course/${fileName}'; // 다운로드할 HWP 파일의 URL
+  const fileUri = FileSystem.documentDirectory + fileName; // 저장할 경로
+
+  const callback = downloadProgress => {
+    const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+    setDownloadProgress(progress);
+  };
+
+  const downloadResumable = FileSystem.createDownloadResumable(
+    uri,
+    fileUri,
+    {},
+    callback
+  );
+
+  try {
+    const { uri } = await downloadResumable.downloadAsync();
+    setDownloadUri(uri);
+
+    // 파일을 공유 가능 여부 확인 후 공유
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(uri);
+    } else {
+      alert('파일을 열 수 없습니다. 한글 뷰어 앱이 필요합니다.');
+    }
+  } catch (error) {
+    console.error(error);
+    alert('파일 다운로드 실패');
+  }
+};
 
   if (loading) {
     return (
@@ -288,7 +324,7 @@ useFocusEffect(
                     <SmallTxt>{data.attachFile}</SmallTxt>
                 </View>
                 <View style={{alignItems:'center'}}>
-                    <YellowButton>
+                    <YellowButton  onPress={() => downloadHwpFile(data.attachFile)} >
                       <SmallTxt style={{color:'#fff'}}>다운로드</SmallTxt>
                     </YellowButton>
                 </View>

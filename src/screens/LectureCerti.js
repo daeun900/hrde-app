@@ -177,17 +177,17 @@ const LectureCerti = ({ navigation }) => {
       console.error('Error fetching enc data:', error);
     }
   };
-  useFocusEffect(
-    useCallback(() => {
-      // 화면이 포커스 되었을 때 탭바 숨기기
-      navigation.getParent()?.setOptions({ tabBarStyle: { display: webviewVisible ? 'none' : 'flex' } });
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     // 화면이 포커스 되었을 때 탭바 숨기기
+  //     navigation.getParent()?.setOptions({ tabBarStyle: { display: webviewVisible ? 'none' : 'flex' } });
 
-      return () => {
-        // 화면이 벗어날 때 탭바 다시 표시
-        navigation.getParent()?.setOptions({ tabBarStyle: { display: 'flex' } });
-      };
-    }, [webviewVisible, navigation])
-  );
+  //     return () => {
+  //       // 화면이 벗어날 때 탭바 다시 표시
+  //       navigation.getParent()?.setOptions({ tabBarStyle: { display: 'flex' } });
+  //     };
+  //   }, [webviewVisible, navigation])
+  // );
 
   // XML 파싱을 Promise로 변환
   const parseXml = (xmlData) => {

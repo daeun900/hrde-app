@@ -181,8 +181,10 @@ useEffect(() => {
 useFocusEffect(
   useCallback(() => {
       setLoading(true); // 로딩 상태를 true로 설정
-      fetchLectureDetail();
-  }, [])
+      fetchLectureDetail().then(() => {
+        console.log('test'+data.chapterInfo); // API 응답 후 데이터 확인
+      });
+  }, [userId])
 );
 
 const downloadHwpFile = async (fileName) => {

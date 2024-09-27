@@ -4,8 +4,10 @@ npx create-expo-app 파일명 --template blank
 
 cd 파일명
 
-npm install styled-components prop-types @react-navigation/native @react-navigation/stack @react-navigation/bottom-tabs @react-navigation/material-top-tabs react-native-tab-view react-native-pager-view axios react-native-dropdown-picker --save react-native-render-html @react-native-async-storage/async-storage react-native-gesture-handler
+npm install @expo/vector-icons @react-native-async-storage/async-storage @react-navigation/bottom-tabs @react-navigation/material-top-tabs @react-navigation/native @react-navigation/stack axios expo expo-av expo-status-bar prop-types react react-dom react-native react-native-canvas react-native-dropdown-picker react-native-gesture-handler react-native-intent-launcher react-native-pager-view react-native-render-html react-native-safe-area-context react-native-screens react-native-tab-view react-native-view-shot react-native-web react-native-webview react-native-xml2js styled-components
 
-npx expo install react-dom @expo/metro-runtime react-native-screens react-native-safe-area-context react-native-reanimated expo- av @expo/vector-icons react-native-web react-native-webview react-native-view-shot  react-native-canvas
+
+npm install --save-dev @babel/core
+cd
 
 npx expo start 

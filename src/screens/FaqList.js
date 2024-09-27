@@ -103,7 +103,7 @@ const AccordionItem = ({ question, idx, category}) => {
   //답변 가져오기
   const fetchFaqDetail = async () => {
     try {
-      const response = await axios.post('http://new.hrdeedu.com/mobileTest/faq_detail.php', { idx });
+      const response = await axios.post('https://hrdelms.com/mobileTest/faq_detail.php', { idx });
       setAnswer(response.data.content);
     } catch (error) {
       console.error("Error fetching FAQ detail:", error);
@@ -158,7 +158,7 @@ const FaqList = ({ route}) => {
   //카테고리명 가져오기
   const fetchFaqs = async () => {
     try {
-      const response = await axios.get('http://new.hrdeedu.com/mobileTest/faq_array.php');
+      const response = await axios.get('https://hrdelms.com/mobileTest/faq_array.php');
       setFaqArray(response.data.faqArray);
     } catch (error) {
       console.error(error);

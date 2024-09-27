@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLectureContext } from "../context/lectureContext";
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons, Octicons } from '@expo/vector-icons';
+import axios from 'axios';
 
 const TopTxt = styled.View`
   width: 100%;
@@ -80,20 +81,26 @@ const TopSec = ({ name, borderBottomWidth }) => {
 
   const removeData = async () => {
     try {
+      await axios.post('https://hrdelms.com/mobileTest/sign_out.php', {
+      });
+  
+      // AsyncStorage에서 사용자 데이터 삭제
       await AsyncStorage.removeItem('userNm');
       await AsyncStorage.removeItem('userId');
-      console.log('Data removed');
+      
       console.log('로그아웃 진행 후 userNm 값 : ', await AsyncStorage.getItem('userNm'));
       console.log('로그아웃 진행 후 userId 값 : ', await AsyncStorage.getItem('userId'));
       clearLectures();
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Start' }]
+        routes: [{ name: 'Start' }],
       });
+      
     } catch (error) {
-      console.error('Error removing data:', error);
+      console.error('Error removing data or signing out:', error);
     }
-  }
+  };
+  
 
   return (
     <TopTxt borderBottomWidth={borderBottomWidth}>

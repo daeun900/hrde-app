@@ -1,12 +1,12 @@
 import React from "react";
-import { Text, View, TouchableOpacity, Alert } from "react-native";
+import { useState } from "react";
 import styled from "styled-components/native";
-import PropTypes from 'prop-types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLectureContext } from "../context/lectureContext";
 import { useNavigation } from '@react-navigation/native';
+import { handleLogout } from '../hooks/LogoutConfirmation'; 
 import { MaterialIcons, Octicons } from '@expo/vector-icons';
-import axios from 'axios';
+
+
 
 const TopTxt = styled.View`
   width: 100%;
@@ -60,48 +60,6 @@ const TopSec = ({ name, borderBottomWidth }) => {
   const { clearLectures } = useLectureContext();
   const navigation = useNavigation();
 
-  const confirmLogout = () => {
-    Alert.alert(
-      '로그아웃',
-      '로그아웃 하시겠습니까?',
-      [
-        {
-          text: '취소',
-          onPress: () => console.log('로그아웃 취소'),
-          style: 'cancel',
-        },
-        {
-          text: '확인',
-          onPress: removeData,
-        },
-      ],
-      { cancelable: false }
-    );
-  }
-
-  const removeData = async () => {
-    try {
-      await axios.post('https://hrdelms.com/mobileTest/sign_out.php', {
-      });
-  
-      // AsyncStorage에서 사용자 데이터 삭제
-      await AsyncStorage.removeItem('userNm');
-      await AsyncStorage.removeItem('userId');
-      
-      console.log('로그아웃 진행 후 userNm 값 : ', await AsyncStorage.getItem('userNm'));
-      console.log('로그아웃 진행 후 userId 값 : ', await AsyncStorage.getItem('userId'));
-      clearLectures();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Start' }],
-      });
-      
-    } catch (error) {
-      console.error('Error removing data or signing out:', error);
-    }
-  };
-  
-
   return (
     <TopTxt borderBottomWidth={borderBottomWidth}>
       <Name>
@@ -109,21 +67,12 @@ const TopSec = ({ name, borderBottomWidth }) => {
         <SmallTxt>님</SmallTxt>
       </Name>
       <BtnWrap>
-        <LogoutBtn onPress={confirmLogout}>
+        <LogoutBtn onPress={() => handleLogout(navigation, clearLectures)}>
           <MaterialIcons name="logout" size={24} color="black" />
         </LogoutBtn>
-        {/* <NoticeBtn onPress={() => navigation.navigate("Notification")}>
-          <Octicons name="bell" size={24} color="black" />
-          <On />
-        </NoticeBtn> */}
       </BtnWrap>
     </TopTxt>
   );
-};
-
-TopSec.propTypes = {
-  name: PropTypes.string,
-  borderBottomWidth: PropTypes.string,
-};
+}
 
 export default TopSec;

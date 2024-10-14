@@ -128,7 +128,9 @@ const LecturePlayer = () => {
   const [chapterNum, setChapterNum] = useState('');
   const [contentsDetailSeq, setContentsDetailSeq] = useState('');
   const [completeTime, setCompleteTime] = useState('');
-  const [playPath, setPlayPath] = useState('');
+  const [contentsMobilePage, setContentsMobilePage] = useState(''); // 총 페이지 수
+  const [contentsMobileNowPage, setContentsMobileNowPage] = useState(1); // 현재 페이지
+  const [playPath, setPlayPath] = useState(''); // 영상 url
 
   // const [needMobileAuth, setNeedMobileAuth] = useState('');
   // const [needMobileAuth2, setNeedMobileAuth2] = useState('');
@@ -139,8 +141,7 @@ const LecturePlayer = () => {
   const [studyTime, setStudyTime] = useState(0); //저장된 학습시간
   const [formattedTime, setFormattedTime] = useState('00:00:00'); //저장된 학습시간
   const [lastStudy, setLastStudy] = useState(''); //재생중인 차시
-
-  const [playURL, setPlayURL] = useState(''); //재생중인 차시
+ //const [playURL, setPlayURL] = useState(''); //재생중인 차시
 
   const navigation = useNavigation();
 
@@ -166,7 +167,7 @@ const LecturePlayer = () => {
       try {
         const modifiedProgressStep = ProgressStep.replace('차시', ''); // "차시" 제거
 
-        const response = await axios.post('https://hrdelms.com/mobileTest/player.php', {
+        const response = await axios.post('https://hrdelms.com/mobile/player.php', {
           id: userId,
           lectureCode: LectureCode,
           studySeq: StudySeq,
@@ -185,10 +186,11 @@ const LecturePlayer = () => {
         setExpl01(data.exp01)//차시목표
         setExpl02(data.exp02)//훈련내용
         setExpl03(data.exp03)//학습활동
-        setChapterNum(data.chapterNum); // chapterNum
-        setContentsDetailSeq(data.contentsDetailSeq); // contentsDetailSeq
-        setCompleteTime(data.completeTime); // completeTime
+        setChapterNum(data.chapterNum);
+        setContentsDetailSeq(data.contentsDetailSeq); 
+        setCompleteTime(data.completeTime);
         setStudyTime(data.studyTime);
+        setContentsMobilePage(data.contentsMobilePage); //총 페이지 수
 
         // setNeedMobileAuth(data.needMobileAuth);
         // setNeedMobileAuth2(data.needMobileAuth2);
@@ -197,13 +199,13 @@ const LecturePlayer = () => {
         setTimeout(() => {
 
       // PlayURL 로직
-      if (data.lastStudy ===  '0') {
-        // lastStudy가 빈 값이면 playPath를 저장
-        setPlayURL(data.playPath);
-      } else {
-        // lastStudy 값이 있으면 앞에 'https://hrdelms.com'을 붙여서 저장
-        setPlayURL(`https://hrdelms.com/contents/${data.lastStudy}`);
-      }
+      // if (data.lastStudy ===  '0') {
+      //   // lastStudy가 빈 값이면 playPath를 저장
+      //   setPlayURL(data.playPath);
+      // } else {
+      //   // lastStudy 값이 있으면 앞에 'https://hrdelms.com'을 붙여서 저장
+      //   setPlayURL(`https://hrdelms.com/contents/${data.lastStudy}`);
+      // }
 
         // 본인인증 관련 로직
         if (data.needMobileAuth === 'Y') {
@@ -285,8 +287,7 @@ const LecturePlayer = () => {
 
         console.log('Video URL:', data.playPath)
         console.log('Study Time:', data.studyTime)
-        console.log('Last Study:', data.lastStudy)
-        console.log('Video URL:', playURL)
+        //console.log('Last Study:', data.lastStudy)
 
         setLoading(false);
 
@@ -375,47 +376,48 @@ const LecturePlayer = () => {
     //학습재생버튼
     const onPlayButtonPress = () => {
       if (webviewRef.current) {
-        webviewRef.current.injectJavaScript(`
-          (function() {
-            const playButton = document.querySelector('div._contentsPlayAndStopBtn');
-            if (playButton) {
-              playButton.click();
-            }
-          })();
-        `);
+        const script = isPlaying 
+          ? "document.querySelector('video').pause();" // 비디오 일시정지
+          : "document.querySelector('video').play();";  // 비디오 재생
+  
+        webviewRef.current.injectJavaScript(script); // JavaScript 코드 삽입
+        setIsPlaying(!isPlaying); // 상태 변경
       }
     };
 
+
     //이전차시버튼
     const onPrevButtonPress = () => {
-      if (webviewRef.current) {
-        webviewRef.current.injectJavaScript(`
-          (function() {
-            const prevButton = document.querySelector('div._prevBtn');
-            if (prevButton) {
-              prevButton.click();
-              window.ReactNativeWebView.postMessage('PLAYING'); // 상태를 PLAYING으로 설정
-            }
-          })();
-        `);
-        setIsPlaying(true); // isPlaying 상태를 true로 설정
-      }
+      let nextPage = contentsMobileNowPage - 1;
+
+      const playPathArray = playPath.split('/');
+      const fileName = playPathArray[playPathArray.length - 1];
+      const fileNameSplit = fileName.split('.');
+      const fileNameFirst = fileNameSplit[0];
+      const fileNameFirstLeft = fileNameFirst.substr(0, fileNameFirst.length - 2);
+  
+      let nextFileName = nextPage > 9 ? `${fileNameFirstLeft}${nextPage}.mp4` : `${fileNameFirstLeft}0${nextPage}.mp4`;
+      let nextPlayPath = playPath.replace(fileName, nextFileName);
+  
+      setContentsMobileNowPage(nextPage);
+      setPlayPath(nextPlayPath);
     };
   
     //다음차시버튼
     const onNextButtonPress = () => {
-      if (webviewRef.current) {
-        webviewRef.current.injectJavaScript(`
-          (function() {
-            const nextButton = document.querySelector('div._nextBtn');
-            if (nextButton) {
-              nextButton.click();
-              window.ReactNativeWebView.postMessage('PLAYING'); // 상태를 PLAYING으로 설정
-            }
-          })();
-        `);
-        setIsPlaying(true); // isPlaying 상태를 true로 설정
-      }
+      let nextPage = contentsMobileNowPage + 1;
+
+      const playPathArray = playPath.split('/');
+      const fileName = playPathArray[playPathArray.length - 1];
+      const fileNameSplit = fileName.split('.');
+      const fileNameFirst = fileNameSplit[0];
+      const fileNameFirstLeft = fileNameFirst.substr(0, fileNameFirst.length - 2);
+  
+      let nextFileName = nextPage > 9 ? `${fileNameFirstLeft}${nextPage}.mp4` : `${fileNameFirstLeft}0${nextPage}.mp4`;
+      let nextPlayPath = playPath.replace(fileName, nextFileName);
+  
+      setContentsMobileNowPage(nextPage);
+      setPlayPath(nextPlayPath);
     };
 
     //영상재생 상태관리
@@ -429,12 +431,13 @@ const LecturePlayer = () => {
     };
 
     //차시변경 상태관리
-    const handleNavigationStateChange = (navState) => {
-      const newUrl = navState.url;//현재 url 저장
-      const trimmedUrl = newUrl.replace('https://hrdelms.com/contents/', ''); //필요한 부분만 추출
+    // const handleNavigationStateChange = (navState) => {
+    //   const newUrl = navState.url;//현재 url 저장
+    //   const trimmedUrl = newUrl.replace('https://hrdelms.com/contents/', ''); //필요한 부분만 추출
 
-      setLastStudy(trimmedUrl);
-    };
+    //   setLastStudy(trimmedUrl);
+    // };
+
     const contentWidth = Dimensions.get('window').width;
 
   return (
@@ -449,10 +452,11 @@ const LecturePlayer = () => {
       <SubTitle>[{contentsTitle}]</SubTitle>
       <WebView
         ref={webviewRef}
-        source={{ uri:  playURL }}
+        source={{ uri:  playPath }}
         style={{ width: '100%', height: 300 }}
         scalesPageToFit={true}
         mediaPlaybackRequiresUserAction={false} // Android에서 필요
+        allowsFullscreenVideo={true}
         javaScriptEnabled={true}
         injectedJavaScript={`
           const meta = document.createElement('meta');
@@ -460,7 +464,7 @@ const LecturePlayer = () => {
           meta.setAttribute('content', 'width=device-width user-scalable=yes');
           document.getElementsByTagName('head')[0].appendChild(meta);
            const video = document.querySelector('video');
-          if (video) {video.pause(); 
+          if (video) {video.play (); 
             video.addEventListener('play', () => {
                 window.ReactNativeWebView.postMessage('PLAYING');
               });
@@ -470,13 +474,16 @@ const LecturePlayer = () => {
             }
         `}
         onMessage={handleMessage} //영상재생상태관리
-        onNavigationStateChange={handleNavigationStateChange}  //차시변경 상태관리
+        // onNavigationStateChange={handleNavigationStateChange}  //차시변경 상태관리
         />
       <BtnWrap>
         <PrevBtn onPress={onPrevButtonPress}>
+        {contentsMobileNowPage !== 1 && (
+          <>
             <AntDesign name="arrowleft" size={20} color="white" />
             <BtnTxt>이전차시</BtnTxt>
-
+          </>
+          )}
         </PrevBtn>
         <PlayBtn onPress={onPlayButtonPress}>
           {isPlaying ? (
@@ -484,11 +491,13 @@ const LecturePlayer = () => {
           ) : (
             <FontAwesome name="play" size={24} color="white" />
           )}
-        </PlayBtn>
+        </PlayBtn> 
+        {contentsMobileNowPage !== contentsMobilePage && (
         <NextBtn onPress={onNextButtonPress}>
-            <BtnTxt>다음차시</BtnTxt>
-            <AntDesign name="arrowright" size={20} color="white" />
+          <BtnTxt>다음차시</BtnTxt>
+          <AntDesign name="arrowright" size={20} color="white" />
         </NextBtn>
+        )}
       </BtnWrap>
       <View>
         <TabContainer

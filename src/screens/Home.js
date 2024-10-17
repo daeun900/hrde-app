@@ -8,6 +8,7 @@ import { UserContext } from "../context/userContext";
 import { useLectureContext } from '../context/lectureContext';
 import {useLogoutConfirmation} from "../hooks/LogoutConfirmation";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Container = styled.ScrollView`
   padding: 0 20px;
@@ -110,6 +111,18 @@ const Home =  ({ navigation }) => {
 
   const checkLoginStatus = async () => {
     try {
+      const storedSession = await AsyncStorage.getItem('userId');
+
+      if (storedSession) {
+        const sessionData = JSON.parse(storedSession);
+        const currentTimeStamp = Math.floor(Date.now() / 1000); 
+        const expirationTime = sessionData.expirationTime; 
+  
+        if (currentTimeStamp > expirationTime) {
+          triggerLogout(true, '세션이 만료되었습니다. 다시 로그인해 주세요.');
+        }
+      }
+      
       const response = await axios.post('https://hrdelms.com/mobile/sign_in_status.php', {
       });
       handleLoginStatus(response.data.result); 
@@ -121,10 +134,10 @@ const Home =  ({ navigation }) => {
   //자동로그아웃
   const handleLoginStatus = (status) => {
     if (status === 'Empty') {
-      triggerLogout(true, 'A');
+      triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
     } else 
     if (status === 'N') {
-      triggerLogout(true, 'B');
+      triggerLogout(true, '다른 기기에서 로그인하여 로그아웃 처리됩니다.');
     }
   };
 

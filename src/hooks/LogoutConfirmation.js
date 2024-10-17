@@ -16,9 +16,9 @@ export const useLogoutConfirmation = () => {
     isLoggingOutRef.current = isLoggingOut;
   }, [isLoggingOut]);
  
-  const triggerLogout = (isAutoLogout, LogoutType) => {
+  const triggerLogout = (isAutoLogout, alertMessage) => {
     if (isAutoLogout) {
-      autoLogout(navigation, clearLectures, setIsLoggingOut, LogoutType);
+      autoLogout(navigation, clearLectures, setIsLoggingOut, alertMessage);
     } else {
       confirmLogout(navigation, clearLectures, setIsLoggingOut);
       isAutoLogout=false;
@@ -64,15 +64,7 @@ export const prevHandleLogout = (navigation) => {
 };
 
 //자동 로그아웃 구현
-const autoLogout = (navigation, clearLectures, setIsLoggingOut, LogoutType) => {
-
-  let alertMessage = '';
-
-  if (LogoutType === 'A') {
-    alertMessage = '다른 기기에서 로그인하여 로그아웃 처리됩니다.';
-  } else if (LogoutType === 'B') {
-    alertMessage = '세션이 만료되어 로그아웃 처리됩니다.';
-  }
+const autoLogout = (navigation, clearLectures, setIsLoggingOut, alertMessage) => {
 
   Alert.alert(
     '자동 로그아웃',

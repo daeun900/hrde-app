@@ -3,7 +3,7 @@ import { useState } from "react";
 import styled from "styled-components/native";
 import { useLectureContext } from "../context/lectureContext";
 import { useNavigation } from '@react-navigation/native';
-import { handleLogout } from '../hooks/LogoutConfirmation'; 
+import { prevHandleLogout } from '../hooks/LogoutConfirmation'; 
 import { MaterialIcons, Octicons } from '@expo/vector-icons';
 
 
@@ -67,7 +67,7 @@ const TopSec = ({ name, borderBottomWidth }) => {
         <SmallTxt>님</SmallTxt>
       </Name>
       <BtnWrap>
-        <LogoutBtn onPress={() => handleLogout(navigation, clearLectures)}>
+        <LogoutBtn onPress={() => prevHandleLogout(navigation)}>
           <MaterialIcons name="logout" size={24} color="black" />
         </LogoutBtn>
       </BtnWrap>

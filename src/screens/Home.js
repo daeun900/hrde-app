@@ -1,4 +1,4 @@
-import React, { useEffect , useContext, useState} from "react";
+import React, { useEffect , useContext, useState, useRef} from "react";
 import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ScrollView, BackHandler, Alert} from "react-native";
 import styled from "styled-components/native";
 import { TopSec, Carousel, ImageSliderModal} from "../components";
@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from '@expo/vector-icons';
 import { UserContext } from "../context/userContext";
 import { useLectureContext } from '../context/lectureContext';
+import {useLogoutConfirmation} from "../hooks/LogoutConfirmation";
+import axios from "axios";
 
 const Container = styled.ScrollView`
   padding: 0 20px;
@@ -104,12 +106,41 @@ const Home =  ({ navigation }) => {
   const {width} = useWindowDimensions();
   const { userNm, updateUserNm  } = useContext(UserContext);
   const [isModalVisible, setModalVisible] = useState(false);
+  const triggerLogout = useLogoutConfirmation();
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await axios.post('https://hrdelms.com/mobile/sign_in_status.php', {
+      });
+      handleLoginStatus(response.data.result); 
+    } catch (error) {
+      console.error('로그인 상태 체크 오류:', error);
+    }
+  };
+
+  //자동로그아웃
+  const handleLoginStatus = (status) => {
+    if (status === 'Empty') {
+      triggerLogout(true, 'A');
+    } else 
+    if (status === 'N') {
+      triggerLogout(true, 'B');
+    }
+  };
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      checkLoginStatus();
+    }, 6000); // 6초마다 세션 상태 확인
+
+    return () => clearInterval(intervalId); // 컴포넌트가 언마운트되면 interval 해제
+  }, []);
 
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
   };
 
- updateUserNm();
+  updateUserNm(); 
  
  return (
     <ImageBackground 

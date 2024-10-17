@@ -8,7 +8,6 @@ import { Home, Etc, LectureList, LectureDetail, LectureCerti, LecturePlayer, CSc
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import PagerView from 'react-native-pager-view';
-import useLogoutConfirmation from "../hooks/LogoutConfirmation";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -20,7 +19,6 @@ const TabIcon = ({ name, focused }) => {
 };
 
 const TabNav = () => {
-    useLogoutConfirmation();
     return (
         <Tab.Navigator
             screenOptions={{

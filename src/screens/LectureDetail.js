@@ -1,14 +1,12 @@
 import React, { useContext, useState, useEffect, useCallback }  from "react";
 import styled from "styled-components/native";
-import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator} from "react-native";
+import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator,  Linking} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TopSec} from "../components";
 import { UserContext } from "../context/userContext";
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 
 const Container = styled.ScrollView`
   padding: 25px;
@@ -142,8 +140,7 @@ const LectureDetail = ({ navigation }) => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(''); 
-  const [downloadUri, setDownloadUri] = useState(null);
-  const [downloadProgress, setDownloadProgress] = useState(null);
+
   //userID추출
   const getUserId = async () => {
     try {
@@ -187,38 +184,12 @@ useFocusEffect(
   }, [userId])
 );
 
-const downloadHwpFile = async (fileName) => {
-  console.log('test')
-  const uri = 'https://hrdelms.com/upload/Course/${fileName}'; // 다운로드할 HWP 파일의 URL
-  const fileUri = FileSystem.documentDirectory + fileName; // 저장할 경로
-
-  const callback = downloadProgress => {
-    const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
-    setDownloadProgress(progress);
+  const handleLinkOpen = (url) => {
+    Linking.openURL(url).catch(err => {
+      console.error("Failed to open URL", err);
+      Alert.alert("오류", "링크를 여는 데 실패했습니다.");
+    });
   };
-
-  const downloadResumable = FileSystem.createDownloadResumable(
-    uri,
-    fileUri,
-    {},
-    callback
-  );
-
-  try {
-    const { uri } = await downloadResumable.downloadAsync();
-    setDownloadUri(uri);
-
-    // 파일을 공유 가능 여부 확인 후 공유
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri);
-    } else {
-      alert('파일을 열 수 없습니다. 한글 뷰어 앱이 필요합니다.');
-    }
-  } catch (error) {
-    console.error(error);
-    alert('파일 다운로드 실패');
-  }
-};
 
   if (loading) {
     return (
@@ -334,12 +305,12 @@ const downloadHwpFile = async (fileName) => {
             }
             {activeTab === 'tab2' &&   
               <ListItem>
-                <View style={{flexDirection:'row'}}> 
+                <View style={{flexDirection:'row', width:'65%' }}> 
                     <Num>1</Num>
-                    <SmallTxt>{data.attachFile}</SmallTxt>
+                    <SmallTxt>학습자료_{data.title}.{data.attachFile.slice(-3)}</SmallTxt>
                 </View>
                 <View style={{alignItems:'center'}}>
-                    <YellowButton  onPress={() => downloadHwpFile(data.attachFile)} >
+                    <YellowButton  onPress={() => handleLinkOpen(`https://hrdelms.com/upload/Course/${data.attachFile}`)} >
                       <SmallTxt style={{color:'#fff'}}>다운로드</SmallTxt>
                     </YellowButton>
                 </View>

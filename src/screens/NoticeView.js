@@ -1,5 +1,5 @@
 import React, { useEffect, useContext, useState, useRef } from "react";
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity,  Linking } from "react-native";
 import styled from "styled-components/native";
 import { TopSec } from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,7 +11,7 @@ const Container = styled.ScrollView`
   flex: 1;
   background-color: #fff;
 `;
-const FlexBox = styled.View`
+const FlexBox = styled.TouchableOpacity`
   flex-direction: row;
 `;
 const BigTxt = styled.Text`
@@ -53,11 +53,10 @@ const NoticeView = ({ route}) => {
   const { userNm, updateUserNm } = useContext(UserContext);
   const [notice, setNotice] = useState({});
   const webViewRef = useRef(null);
-
+  const { idx } = route.params;
   useEffect(() => {
     updateUserNm();
-    const { idx } = route.params;
-
+ 
     // 서버에서 데이터 가져오기
     axios.post('https://hrdelms.com/mobileTest/notice_detail.php', { idx })
       .then(response => {
@@ -75,6 +74,12 @@ const NoticeView = ({ route}) => {
     document.head.appendChild(style);
   `;
 
+  const handleLinkOpen = (url) => {
+    Linking.openURL(url).catch(err => {
+      console.error("Failed to open URL", err);
+      Alert.alert("오류", "링크를 여는 데 실패했습니다.");
+    });
+  };
   return (
     <View insets={insets} style={{ flex: 1 }}>
       <TopSec name={userNm} />
@@ -89,34 +94,34 @@ const NoticeView = ({ route}) => {
         </TitleWrap>
         <ContentWrap>
           {notice.fileName1 && (
-            <FlexBox>
+            <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=1`)}>
               <DownloadIcon source={require('../../assets/download.png')} />
-              <SmallTxt>{notice.fileName1}</SmallTxt>
+              <SmallTxt>{notice.realFileName1}</SmallTxt>
             </FlexBox>
           )}
           {notice.fileName2 && (
-            <FlexBox>
+            <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=2`)}>
               <DownloadIcon source={require('../../assets/download.png')} />
-              <SmallTxt>{notice.fileName2}</SmallTxt>
+              <SmallTxt>{notice.realFileName2}</SmallTxt>
             </FlexBox>
           )}
           {notice.fileName3 && (
-            <FlexBox>
-              <DownloadIcon source={require('../../assets/download.png')} />
-              <SmallTxt>{notice.fileName3}</SmallTxt>
-            </FlexBox>
+             <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=3`)}>
+                <DownloadIcon source={require('../../assets/download.png')} />
+                <SmallTxt>{notice.realFileName3}</SmallTxt>
+              </FlexBox>
           )}
            {notice.fileName4 && (
-            <FlexBox>
-              <DownloadIcon source={require('../../assets/download.png')} />
-              <SmallTxt>{notice.fileName4}</SmallTxt>
-            </FlexBox>
+              <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=4`)}>
+                <DownloadIcon source={require('../../assets/download.png')} />
+                <SmallTxt>{notice.realFileName4}</SmallTxt>
+              </FlexBox>
           )}
            {notice.fileName5 && (
-            <FlexBox>
-              <DownloadIcon source={require('../../assets/download.png')} />
-              <SmallTxt>{notice.fileName5}</SmallTxt>
-            </FlexBox>
+              <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=5`)}>
+                <DownloadIcon source={require('../../assets/download.png')} />
+                <SmallTxt>{notice.realFileName5}</SmallTxt>
+              </FlexBox>
           )}
            <WebView 
             nestedScrollEnabled

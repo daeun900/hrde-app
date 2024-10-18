@@ -2,7 +2,7 @@
   "expo": {
     "name": "hrde-app",
     "slug": "hrde-app",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,7 +12,14 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.HRDeSolution.HRDe",
+      "buildNumber": "5", 
+      "icon": "./assets/adaptive-icon.png",
+      "infoPlist": {
+        "UIWebViewAllowsInlineMediaPlayback": true,
+        "allowsInlineMediaPlayback": true
+      }
     },
     "android": {
       "supportsTablet": false,
@@ -21,17 +28,24 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.daeun900.hrdeapp",
-        "softwareKeyboardLayoutMode": "pan",
-        "intentFilters": [
-          {
-            "action": "VIEW",
-            "category": ["LAUNCHER","BROWSABLE", "DEFAULT"],
-            "data": {
-              "scheme": "intent"
-            }
+      "softwareKeyboardLayoutMode": "pan",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": [
+            "LAUNCHER",
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": {
+            "scheme": "intent"
           }
-        ],
-        "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
+        }
+      ],
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

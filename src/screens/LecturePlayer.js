@@ -454,10 +454,12 @@ const LecturePlayer = () => {
         ref={webviewRef}
         source={{ uri:  playPath }}
         style={{ width: '100%', height: 300 }}
-        scalesPageToFit={true}
-        mediaPlaybackRequiresUserAction={false} // Android에서 필요
-        allowsFullscreenVideo={true}
+        useWebKit={true} // WebKit 사용 (iOS) for allowsInlineMediaPlayback 
+        allowsInlineMediaPlayback={true}  // 인라인 재생 허용 (iOS)
+        mediaPlaybackRequiresUserAction={true} // 사용자가 재생을 눌러야만 재생
+        allowsFullscreenVideo={true} // 전체화면 모드 사용 가능
         javaScriptEnabled={true}
+        domStorageEnabled={true}
         injectedJavaScript={`
           const meta = document.createElement('meta');
           meta.setAttribute('name', 'viewport');

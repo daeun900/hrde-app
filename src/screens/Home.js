@@ -1,5 +1,5 @@
 import React, { useEffect , useContext, useState, useRef} from "react";
-import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ScrollView, BackHandler, Alert} from "react-native";
+import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ActivityIndicator} from "react-native";
 import styled from "styled-components/native";
 import { TopSec, Carousel, ImageSliderModal} from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
 
 
 const Home =  ({ navigation }) => {
-  const { lectures } = useLectureContext(lectures);
+  const { lectures , fetchLectureData, loading} = useLectureContext(lectures);
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
   const data = [{image: require('../../assets/banner1.png'),},{image: require('../../assets/banner2.png'),},{image: require('../../assets/banner3.png'),}]
   const {width} = useWindowDimensions();
@@ -149,11 +149,16 @@ const Home =  ({ navigation }) => {
     return () => clearInterval(intervalId); // 컴포넌트가 언마운트되면 interval 해제
   }, []);
 
+  useEffect(() => {
+    fetchLectureData(); 
+    updateUserNm(); 
+  }, []);
+
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
   };
 
-  updateUserNm(); 
+
  
  return (
     <ImageBackground 
@@ -164,6 +169,10 @@ const Home =  ({ navigation }) => {
     <View insets={insets} style={{flex:1}}>
         <TopSec name={userNm} borderBottomWidth="0px"/>
         <Container contentContainerStyle={{ paddingBottom: insets.bottom + 20}}>
+        {loading ? (  // 로딩 중일 때는 로딩 인디케이터 표시
+            <ActivityIndicator size="large" color="#FFD600" />
+          ) : (
+            <>
             <CarouselBox style={{width:width}}>
                 <Carousel data={data} />
             </CarouselBox>
@@ -204,6 +213,8 @@ const Home =  ({ navigation }) => {
               <MidTxt>고객센터 바로가기</MidTxt>
               <MaterialIcons name="arrow-forward-ios" size={18} color="black" />
           </BigButton>
+          </>
+          )}
         </Container>
         <ImageSliderModal isVisible={isModalVisible} onClose={toggleModal} />
        

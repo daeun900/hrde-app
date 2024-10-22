@@ -110,7 +110,7 @@ const Signin = ({navigation}) => {
 
   return (
     <Container insets={insets} onPress={() => Keyboard.dismiss()}>
-      <LogoImg source={require('../../assets/logo.png')}/>
+     <LogoImg source={{uri: 'https://hrdelms.com/common/img/logo.png'}}   resizeMode="contain" />
       <BigTxt>당신의 도전을 응원합니다.</BigTxt>
       <SmallTxt>즐거운 강의 시청으로 당신의 직무능력 UP!</SmallTxt>
       <Input 

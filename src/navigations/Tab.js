@@ -37,7 +37,7 @@ const TabNav = () => {
         >
             <Tab.Screen name="Home" component={Home} 
                 options={{
-                    headerTitle: props => (<Image style={{ width: 158, height: 28 }} source={require('../../assets/logo.png')} />),
+                    headerTitle: props => (<Image style={{ width: 158, height: 28 }} source={{uri: 'https://hrdelms.com/common/img/logo.png'}}   resizeMode="contain" />),
                     headerTitleAlign: "center",
                     shadowOpacity: 0,
                     headerShadowVisible: false,

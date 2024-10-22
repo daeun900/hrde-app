@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
 const Home =  ({ navigation }) => {
   const { lectures , fetchLectureData, loading} = useLectureContext(lectures);
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
-  const data = [{image: require('../../assets/banner1.png'),},{image: require('../../assets/banner2.png'),},{image: require('../../assets/banner3.png'),}]
+  const data = [{image: {uri: 'https://hrdelms.com/mobile/assets/banner1.png'}},{image:{uri: 'https://hrdelms.com/mobile/assets/banner2.png'}},{image: {uri: 'https://hrdelms.com/mobile/assets/banner3.png'}}]
   const {width} = useWindowDimensions();
   const { userNm, updateUserNm  } = useContext(UserContext);
   const [isModalVisible, setModalVisible] = useState(false);

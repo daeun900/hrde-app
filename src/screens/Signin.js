@@ -99,7 +99,16 @@ const Signin = ({navigation}) => {
           Alert.alert("로그인 실패", "비밀번호가 일치하지 않습니다.");
           setPassword("");
         } else if (result === "N3") {
-          Alert.alert("로그인 실패", "휴면 계정입니다.");
+          Alert.alert("로그인 실패", "휴면 계정입니다. 관리자에게 문의하세요.");
+        }
+        else if (result === "A") {
+          Alert.alert("로그인 실패", "필수동의사항 미동의 회원입니다. PC버전으로 접속 하여 필수 동의사항 동의 후 이용 바랍니다.");
+        }
+        else if (result === "P") {
+          Alert.alert("로그인 실패", "초기비밀번호 이용중입니다. PC버전으로 접속 하여 본인인증 및 비밀번호 변경 후 이용 바랍니다.");
+        }
+        else if (result === "AP") {
+          Alert.alert("로그인 실패", "초기비밀번호 이용중입니다. PC버전으로 접속 하여 본인인증 및 비밀번호 변경 후 이용 바랍니다.");
         }
       } catch (err) {
         console.log(`Error Message: ${err}`);

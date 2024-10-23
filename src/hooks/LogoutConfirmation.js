@@ -65,17 +65,15 @@ export const prevHandleLogout = (navigation) => {
 
 //자동 로그아웃 구현
 const autoLogout = (navigation, clearLectures, setIsLoggingOut, alertMessage) => {
-
+  setIsLoggingOut(true);
+  handleLogout(navigation, clearLectures);
+  
   Alert.alert(
     '자동 로그아웃',
      alertMessage,
     [
       {
-        text: '확인',
-        onPress: () => {
-          setIsLoggingOut(true);
-          handleLogout(navigation, clearLectures);
-        }
+        text: '확인'
       }
     ],
     { cancelable: false }

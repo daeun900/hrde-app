@@ -33,7 +33,10 @@ padding-left: 10px;
 const SmallTxt = styled.Text`
 font-size:14px;
 color: #767676;
-line-height: 50px;
+line-height: 20px;
+text-align: center;
+margin-top: 10px;
+margin-bottom: 10px;
 `
 
 

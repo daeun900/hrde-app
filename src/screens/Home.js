@@ -70,9 +70,10 @@ const SmallButton = styled.TouchableOpacity`
 `
  
 const BigButton = styled.TouchableOpacity`
-  padding: 20px;
+  padding:0 20px;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
   margin-top: 10px;
   background-color: #fff;
   border-radius: 16px;
@@ -181,10 +182,10 @@ const Home =  ({ navigation }) => {
                   <Image source={require('../../assets/profile_icon.png')} style={{marginRight:10}}/>
                   <View>
                     <Name name={userNm}>
-                        <BigTxt style={{ fontWeight: 600, marginRight:3}}>{userNm}</BigTxt>
+                        <BigTxt style={{ fontWeight: 600, marginRight:3}} allowFontScaling={false}>{userNm}</BigTxt>
                         <SmallTxt>님</SmallTxt>
                     </Name>
-                    <SmallTxt style={{fontSize:13}}>나의 학습실에서 수강중인 과정을 확인하세요</SmallTxt>
+                    <SmallTxt style={{fontSize:13}} numberOfLines={2}>나의 학습실에서 수강중인 과정을 확인하세요</SmallTxt>
                   </View>
               </FlexBox>
               <View style={{width:'100%', backgroundColor:'#rgba(255,255,255,.5)', paddingVertical: 13, borderRadius: 26}}>

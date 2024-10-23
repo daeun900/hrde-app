@@ -6,8 +6,6 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { Home, Etc, LectureList, LectureDetail, LectureCerti, LecturePlayer, CScenter, Inquiry, InquiryComplete, Notification,Notice,NoticeView, Faq, FaqList } from "../screens";
 import { Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import PagerView from 'react-native-pager-view';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -244,7 +242,7 @@ const ETCcontainer = () => {
                     headerShadowVisible: false,
                     tabBarLabel: '기타',
                     headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingLeft: 20, marginRight: -10 }}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={{ paddingLeft: 20, marginRight: -10 }}>
                             <Feather name="arrow-left" size={24} color="black" />
                         </TouchableOpacity>
                     ),
@@ -260,7 +258,7 @@ const ETCcontainer = () => {
                     headerShadowVisible: false,
                     tabBarLabel: '공지사항',
                     headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.pop()} style={{ paddingLeft: 20, marginRight: -10 }}>
+                        <TouchableOpacity onPress={() => navigation.replace('Etc')} style={{ paddingLeft: 20, marginRight: -10 }}>
                             <Feather name="arrow-left" size={24} color="black" />
                         </TouchableOpacity>
                     ),
@@ -290,7 +288,7 @@ const ETCcontainer = () => {
                     headerShadowVisible: false,
                     tabBarLabel: '자주묻는 질문',
                     headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.pop()} style={{ paddingLeft: 20, marginRight: -10 }}>
+                        <TouchableOpacity onPress={() => navigation.replace('Etc')} style={{ paddingLeft: 20, marginRight: -10 }}>
                             <Feather name="arrow-left" size={24} color="black" />
                         </TouchableOpacity>
                     ),

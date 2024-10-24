@@ -151,8 +151,11 @@ const Lecture = () => {
                     shadowOpacity: 0,
                     headerShadowVisible: false,
                     tabBarLabel: '나의 학습실',
-                    gestureEnabled: false, // 스와이프로 뒤로가기 방지
-                    headerLeft: null,      // 뒤로가기 버튼 제거
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.navigate('LectureList')} style={{ paddingLeft: 20, marginRight: -10 }}>
+                            <Feather name="arrow-left" size={24} color="black" />
+                        </TouchableOpacity>
+                    ),
                     headerTitleAlign: 'left',
                 })}
             />

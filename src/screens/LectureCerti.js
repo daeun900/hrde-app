@@ -13,8 +13,8 @@ const LectureCerti = ({ navigation }) => {
   useEffect(() => {
     // 뒤로 가기 버튼 핸들러 등록
     const backAction = () => {
-      Alert.alert("뒤로가기 불가", "이 화면에서는 뒤로 가기를 할 수 없습니다.");
-      return true; // 뒤로 가기를 차단
+      navigation.navigate('LectureList')
+      return true;
     };
 
     const backHandler = BackHandler.addEventListener(
@@ -22,7 +22,8 @@ const LectureCerti = ({ navigation }) => {
       backAction
     );
 
-    return () => backHandler.remove(); // 컴포넌트가 언마운트될 때 핸들러 제거
+    return () => backHandler.remove(); 
+    
   }, []);
 
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
@@ -34,9 +35,11 @@ const LectureCerti = ({ navigation }) => {
   } = route.params;
   console.log('Certi 받은 데이터:',route.params)
 
+
+/////////////////////////////////////////////// mOTP 제출 ////////////////////////////////////////////////////////////
+
   const otpRef = useRef(""); // otp 값을 useRef로 관리
 
-  //mOTP 제출
   const handleOtpSubmit = async () => {
     const otp = otpRef.current; // useRef에서 직접 값 가져오기
     console.log(otp)
@@ -159,7 +162,7 @@ const LectureCerti = ({ navigation }) => {
   const [encData, setEncData] = useState(null);
   const [webviewVisible, setWebviewVisible] = useState(false);
  
-  //휴대폰 인증
+  /////////////////////////////////////////////////////// 휴대폰 인증 /////////////////////////////////////////////////
   const getEncData = async () => {
     if (Platform.OS === 'ios') {
       Alert.alert("휴대폰 본인인증", "휴대폰 인증은 본인명의 휴대폰만 인증 가능합니다.");

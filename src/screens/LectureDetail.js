@@ -141,49 +141,43 @@ const LectureDetail = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(''); 
 
-  //userID추출
-  const getUserId = async () => {
-    try {
-      const idString = await AsyncStorage.getItem('userId');
-      if (idString !== null) {
-        const idObject = JSON.parse(idString);
-        const userId = idObject.value;
-        setUserId(userId);
+  //학습정보가져오기
+  useEffect(() => {
+    const fetchLectureDetail = async () => {
+      if (userId) {
+        try {
+          const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq, id: userId });
+          const fetchedData = response.data;
+          console.log('Lecture Detail 받은 데이터:', fetchedData);
+          setData(fetchedData);
+        } catch (error) {
+          console.error('Error fetching lecture details:', error);
+        } finally {
+          setLoading(false);
+        }
       }
-      console.log(userId)
-    } catch (error) {
-      console.error('Failed to fetch the user ID:', error);
-    }
-  };
+    };
+  
+    const getUserId = async () => {
+      try {
+        const idString = await AsyncStorage.getItem('userId');
+        if (idString !== null) {
+          const idObject = JSON.parse(idString);
+          const userIdValue = idObject.value;
+          setUserId(userIdValue);
+          fetchLectureDetail(); // userId 가져온 후에 fetchLectureDetail 실행
+        }
+      } catch (error) {
+        console.error('Failed to fetch the user ID:', error);
+      }
+    };
+  
+    getUserId();
+  }, [Seq, userId]);  
+  
 
- // 학습정보 가져오기 함수
- const fetchLectureDetail = async () => {
-  try {
-    const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq, id: userId });
-    const fetchedData = response.data;
-    console.log('Lecture Detail 받은 데이터:', fetchedData); // 데이터 확인
-    setData(fetchedData);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setLoading(false);
-  }
-};
 
-useEffect(() => {
-  getUserId();
-}, []);
-
-// 페이지 포커스 될 때마다 데이터 갱신
-useFocusEffect(
-  useCallback(() => {
-      setLoading(true); // 로딩 상태를 true로 설정
-      fetchLectureDetail().then(() => {
-        console.log('test'+data.chapterInfo); // API 응답 후 데이터 확인
-      });
-  }, [userId])
-);
-
+//학습자료 다운로드
   const handleLinkOpen = (url) => {
     Linking.openURL(url).catch(err => {
       console.error("Failed to open URL", err);
@@ -191,135 +185,132 @@ useFocusEffect(
     });
   };
 
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
-  }
-
-  if (!data) {
+  } else{
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>데이터를 불러오는 중 오류가 발생했습니다.</Text>
+      <View insets={insets} style={{flex:1}}>
+          <TopSec name={userNm}/>
+          <Container contentContainerStyle={{ paddingBottom: insets.bottom + 20}}>
+            <LectureDetailBox>
+                <Title>{data.title}</Title>
+                <LectureDetailTxt>
+                    <Text style={{color:'#767676'}}>수강기간</Text>
+                    <Text>{data.lectureStart} ~ {data.lectureEnd}</Text>
+                </LectureDetailTxt>
+                <LectureDetailTxt>
+                    <Text style={{color:'#767676'}}>남은수강일</Text>
+                    <Text>{data.daysLeft}일</Text>
+                </LectureDetailTxt>
+                <LectureDetailTxt>
+                    <Text style={{color:'#767676'}}>내용전문가</Text>
+                    <Text>{data.professor}</Text>
+                </LectureDetailTxt>
+                <ProgressWrap>
+                    <ProgressBox style={{width: '40%'}}>
+                        <ProgressTitle><Text>현재 진행상태</Text></ProgressTitle>
+                        <Progress style={{flexDirection:'column'}}>
+                          <Point>{data.classNum}</Point>
+                          <SSmallTxt style={{color: '#767676'}}>
+                            {data.classStatus.replace(/<br\s*\/?>/gi, ' ')}
+                          </SSmallTxt>
+                        </Progress>
+                    </ProgressBox>
+                    <ProgressBox>
+                        <ProgressTitle><Text>강의진도</Text></ProgressTitle>
+                        <Progress><Point>{data.progressNum}</Point><SSmallTxt>/{data.chapter}</SSmallTxt></Progress>
+                    </ProgressBox>
+                    <ProgressBox>
+                        <ProgressTitle><Text>진도율</Text></ProgressTitle>
+                        <Progress><Point>{data.progressPercent}</Point><SSmallTxt>%</SSmallTxt></Progress>
+                    </ProgressBox>
+                </ProgressWrap>
+            </LectureDetailBox>
+            <Line/>
+            <TabContainer>
+                <TabButton active={activeTab === 'tab1'} onPress={() => setActiveTab('tab1')}>
+                  <TabText active={activeTab === 'tab1'}>과정목록</TabText>
+                </TabButton>
+                <TabButton active={activeTab === 'tab2'} onPress={() => setActiveTab('tab2')}>
+                  <TabText active={activeTab === 'tab2'}>학습자료 다운로드</TabText>
+                </TabButton>
+            </TabContainer>
+            <ContentContainer>
+              {activeTab === 'tab1' && 
+                data.chapterInfo.map((item, index) => (
+                <ListItem key={index}>
+                  <View style={{flexDirection:'row', width: item[2] === 'Y' ? '65%' : '100%'}}> 
+                      <Num>{index + 1}</Num>
+                      {item[1] === 'A' && (
+                      <SmallTxt>{item[0]}</SmallTxt>
+                     )}
+                      {item[1] === 'B' && (
+                        <SmallTxt style={{ color: '#FF5733' }}>중간평가는 PC에서 가능합니다.</SmallTxt>
+                      )}
+                      {item[1] === 'C' && (
+                        <SmallTxt style={{ color: '#FF5733' }}>최종평가는 PC에서 가능합니다.</SmallTxt>
+                      )}
+                      {item[1] === 'D' && (
+                        <SmallTxt style={{ color: '#FF5733' }}>과제는 PC에서 가능합니다.</SmallTxt>
+                      )}
+                  </View>
+                   <View style={{alignItems:'center'}}>
+                   {item[2] === 'Y' && (
+                      <>
+                       <YellowButton 
+                          onPress={() => {
+                            const returnData = data.returnBack[index];
+                            navigation.navigate("LecturePlayer", { 
+                              LectureCode: returnData[0], 
+                              StudySeq: returnData[1], 
+                              ChapterSeq: returnData[2], 
+                              ContentsIdx: returnData[3], 
+                              // ProgressIdx: returnData[4], 
+                              PlayMode: returnData[5], 
+                              ProgressStep: returnData[6] 
+                            });
+                          }}
+                        >
+                        <SmallTxt style={{color:'#fff'}}>수강하기</SmallTxt>
+                      </YellowButton>
+                        <Text>
+                          <MidTxt>{item[3]}</MidTxt>
+                          <SSmallTxt>%</SSmallTxt>
+                        </Text>
+                      </>
+                    )}
+            
+             
+                    </View>
+                </ListItem>))
+              }
+              {activeTab === 'tab2' &&   
+                <ListItem>
+                  <View style={{flexDirection:'row', width:'65%' }}> 
+                      <Num>1</Num>
+                      <SmallTxt>학습자료_{data.title}.{data.attachFile.slice(-3)}</SmallTxt>
+                  </View>
+                  <View style={{alignItems:'center'}}>
+                      <YellowButton  onPress={() => handleLinkOpen(`https://hrdelms.com/upload/Course/${data.attachFile}`)} >
+                        <SmallTxt style={{color:'#fff'}}>다운로드</SmallTxt>
+                      </YellowButton>
+                  </View>
+                </ListItem>
+              }
+            </ContentContainer>
+          </Container>
       </View>
     );
   }
 
-  return (
-    <View insets={insets} style={{flex:1}}>
-        <TopSec name={userNm}/>
-        <Container contentContainerStyle={{ paddingBottom: insets.bottom + 20}}>
-          <LectureDetailBox>
-              <Title>{data.title}</Title>
-              <LectureDetailTxt>
-                  <Text style={{color:'#767676'}}>수강기간</Text>
-                  <Text>{data.lectureStart} ~ {data.lectureEnd}</Text>
-              </LectureDetailTxt>
-              <LectureDetailTxt>
-                  <Text style={{color:'#767676'}}>남은수강일</Text>
-                  <Text>{data.daysLeft}일</Text>
-              </LectureDetailTxt>
-              <LectureDetailTxt>
-                  <Text style={{color:'#767676'}}>내용전문가</Text>
-                  <Text>{data.professor}</Text>
-              </LectureDetailTxt>
-              <ProgressWrap>
-                  <ProgressBox style={{width: '40%'}}>
-                      <ProgressTitle><Text>현재 진행상태</Text></ProgressTitle>
-                      <Progress style={{flexDirection:'column'}}>
-                        <Point>{data.classNum}</Point>
-                        <SSmallTxt style={{color: '#767676'}}>
-                          {data.classStatus.replace(/<br\s*\/?>/gi, ' ')}
-                        </SSmallTxt>
-                      </Progress>
-                  </ProgressBox>
-                  <ProgressBox>
-                      <ProgressTitle><Text>강의진도</Text></ProgressTitle>
-                      <Progress><Point>{data.progressNum}</Point><SSmallTxt>/{data.chapter}</SSmallTxt></Progress>
-                  </ProgressBox>
-                  <ProgressBox>
-                      <ProgressTitle><Text>진도율</Text></ProgressTitle>
-                      <Progress><Point>{data.progressPercent}</Point><SSmallTxt>%</SSmallTxt></Progress>
-                  </ProgressBox>
-              </ProgressWrap>
-          </LectureDetailBox>
-          <Line/>
-          <TabContainer>
-              <TabButton active={activeTab === 'tab1'} onPress={() => setActiveTab('tab1')}>
-                <TabText active={activeTab === 'tab1'}>과정목록</TabText>
-              </TabButton>
-              <TabButton active={activeTab === 'tab2'} onPress={() => setActiveTab('tab2')}>
-                <TabText active={activeTab === 'tab2'}>학습자료 다운로드</TabText>
-              </TabButton>
-          </TabContainer>
-          <ContentContainer>
-            {activeTab === 'tab1' && 
-              data.chapterInfo.map((item, index) => (
-              <ListItem key={index}>
-                <View style={{flexDirection:'row', width: item[2] === 'Y' ? '65%' : '100%'}}> 
-                    <Num>{index + 1}</Num>
-                    {item[1] === 'A' && (
-                    <SmallTxt>{item[0]}</SmallTxt>
-                   )}
-                    {item[1] === 'B' && (
-                      <SmallTxt style={{ color: '#FF5733' }}>중간평가는 PC에서 가능합니다.</SmallTxt>
-                    )}
-                    {item[1] === 'C' && (
-                      <SmallTxt style={{ color: '#FF5733' }}>최종평가는 PC에서 가능합니다.</SmallTxt>
-                    )}
-                    {item[1] === 'D' && (
-                      <SmallTxt style={{ color: '#FF5733' }}>과제는 PC에서 가능합니다.</SmallTxt>
-                    )}
-                </View>
-                 <View style={{alignItems:'center'}}>
-                 {item[2] === 'Y' && (
-                    <>
-                     <YellowButton 
-                        onPress={() => {
-                          const returnData = data.returnBack[index];
-                          navigation.navigate("LecturePlayer", { 
-                            LectureCode: returnData[0], 
-                            StudySeq: returnData[1], 
-                            ChapterSeq: returnData[2], 
-                            ContentsIdx: returnData[3], 
-                            // ProgressIdx: returnData[4], 
-                            PlayMode: returnData[5], 
-                            ProgressStep: returnData[6] 
-                          });
-                        }}
-                      >
-                      <SmallTxt style={{color:'#fff'}}>수강하기</SmallTxt>
-                    </YellowButton>
-                      <Text>
-                        <MidTxt>{item[3]}</MidTxt>
-                        <SSmallTxt>%</SSmallTxt>
-                      </Text>
-                    </>
-                  )}
-          
-           
-                  </View>
-              </ListItem>))
-            }
-            {activeTab === 'tab2' &&   
-              <ListItem>
-                <View style={{flexDirection:'row', width:'65%' }}> 
-                    <Num>1</Num>
-                    <SmallTxt>학습자료_{data.title}.{data.attachFile.slice(-3)}</SmallTxt>
-                </View>
-                <View style={{alignItems:'center'}}>
-                    <YellowButton  onPress={() => handleLinkOpen(`https://hrdelms.com/upload/Course/${data.attachFile}`)} >
-                      <SmallTxt style={{color:'#fff'}}>다운로드</SmallTxt>
-                    </YellowButton>
-                </View>
-              </ListItem>
-            }
-          </ContentContainer>
-        </Container>
-    </View>
-  );
+
+
+ 
 };
 
 export default LectureDetail;

@@ -17,7 +17,7 @@ export const LectureProvider = ({ children }) => {
       if (userData && userData.value) {
         const userId = userData.value;
         console.log('userId 값 ---->', userId);
-        const response = await axios.post("https://hrdelms.com/mobileTest/lecture_list.php", { id: userId });
+        const response = await axios.post("https://hrdelms.com/mobile/lecture_list.php", { id: userId });
 
         console.log('Server response:', response.data);
         

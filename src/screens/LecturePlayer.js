@@ -347,7 +347,7 @@ useEffect(() => {
         // 전송할 데이터 콘솔에 출력
         console.log('Sending the following data to the server:', requestData);
     
-        const response = await axios.post('https://hrdelms.com/mobileTest/store_progress.php', requestData);
+        const response = await axios.post('https://hrdelms.com/mobile/store_progress.php', requestData);
     
         // 서버 응답 확인
         if (response.data.alert === 'Y') {

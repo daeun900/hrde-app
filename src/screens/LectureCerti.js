@@ -23,7 +23,7 @@ const LectureCerti = ({ navigation }) => {
     );
 
     return () => backHandler.remove(); 
-    
+
   }, []);
 
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
@@ -80,7 +80,7 @@ const LectureCerti = ({ navigation }) => {
               //입과 본인인증 시
               if (EvalCd  == '00') {
                 try {
-                  await axios.post("https://hrdelms.com/mobileTest/player_cert_insert.php", {
+                  await axios.post("https://hrdelms.com/mobile/player_cert_insert.php", {
                     id: Id,
                     lectureCode: LectureCode,
                     studySeq: StudySeq,
@@ -105,7 +105,7 @@ const LectureCerti = ({ navigation }) => {
             //입과 외 인증 시 
               else{
                 try {
-                  const response = await axios.post("https://hrdelms.com/mobileTest/player_captcha_session.php", {
+                  const response = await axios.post("https://hrdelms.com/mobile/player_captcha_session.php", {
                     chapterNum: ChapterNum,
                     lectureCode: LectureCode,
                     studySeq: StudySeq,
@@ -171,7 +171,7 @@ const LectureCerti = ({ navigation }) => {
     }
 
     try {
-      const response = await axios.post('https://hrdelms.com/mobileTest/create_encoded_data.php', {
+      const response = await axios.post('https://hrdelms.com/mobile/create_encoded_data.php', {
         lectureCode: LectureCode
       });
       setEncData(response.data.encData);  // 서버에서 암호화된 데이터 받음
@@ -239,7 +239,7 @@ const LectureCerti = ({ navigation }) => {
               if (EvalCd === '00') {
                // 입과 본인 인증 시
                 try {
-                  await axios.post("https://hrdelms.com/mobileTest/player_cert_insert.php", {
+                  await axios.post("https://hrdelms.com/mobile/player_cert_insert.php", {
                     id: Id,
                     lectureCode: LectureCode,
                     studySeq: StudySeq,
@@ -262,7 +262,7 @@ const LectureCerti = ({ navigation }) => {
               } else {
                 // 입과 외 인증
                 try {
-                  await axios.post("https://hrdelms.com/mobileTest/player_captcha_session.php", {
+                  await axios.post("https://hrdelms.com/mobile/player_captcha_session.php", {
                     chapterNum: ChapterNum,
                     lectureCode: LectureCode,
                     studySeq: StudySeq,

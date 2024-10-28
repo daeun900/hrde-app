@@ -98,7 +98,7 @@ const InquirySubmit = ({ navigation }) => {
 
   useEffect(() => {
     // 문의종류가져오기
-    fetch('https://hrdelms.com/mobileTest/ask_array.php')
+    fetch('https://hrdelms.com/mobile/ask_array.php')
       .then((response) => response.json())
       .then((data) => {
         if (data.askArray) {
@@ -176,7 +176,7 @@ const InquirySubmit = ({ navigation }) => {
     };
 
     console.log(data);
-    axios.post('https://hrdelms.com/mobileTest/ask.php', data)
+    axios.post('https://hrdelms.com/mobile/ask.php', data)
       .then((response) => {
         console.log(response.data.result);
         if (response.data.result === 'Y') {

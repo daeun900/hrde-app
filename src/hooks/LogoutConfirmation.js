@@ -41,7 +41,7 @@ export const useLogoutConfirmation = () => {
 
 const handleLogout = async (navigation, clearLectures) => {
   try {
-    await axios.post('https://hrdelms.com/mobileTest/sign_out.php', {});
+    await axios.post('https://hrdelms.com/mobile/sign_out.php', {});
     await AsyncStorage.removeItem('userNm');
     await AsyncStorage.removeItem('userId');
     clearLectures();

@@ -84,7 +84,7 @@ const AccordionItem = ({ question, answer, status, date, idx  }) => {
   //답변확인
   const fetchAnswer = async () => {
       try {
-        const response = await axios.post('https://hrdelms.com/mobileTest/ask_answer.php', { idx });
+        const response = await axios.post('https://hrdelms.com/mobile/ask_answer.php', { idx });
         setFetchedAnswer(response.data.answer);
         console.log(response.data.answer)
       } catch (error) {
@@ -154,7 +154,7 @@ const InquiryView = ({ navigation }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.post('https://hrdelms.com/mobileTest/ask_list.php', {
+        const response = await axios.post('https://hrdelms.com/mobile/ask_list.php', {
           id: userId 
         }, {
           timeout: 10000 

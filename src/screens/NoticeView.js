@@ -58,7 +58,7 @@ const NoticeView = ({ route}) => {
     updateUserNm();
  
     // 서버에서 데이터 가져오기
-    axios.post('https://hrdelms.com/mobileTest/notice_detail.php', { idx })
+    axios.post('https://hrdelms.com/mobile/notice_detail.php', { idx })
       .then(response => {
         setNotice(response.data);
       })

@@ -146,7 +146,7 @@ const LectureDetail = ({ navigation }) => {
     const fetchLectureDetail = async () => {
       if (userId) {
         try {
-          const response = await axios.post('https://hrdelms.com/mobileTest/lecture_detail.php', { seq: Seq, id: userId });
+          const response = await axios.post('https://hrdelms.com/mobile/lecture_detail.php', { seq: Seq, id: userId });
           const fetchedData = response.data;
           console.log('Lecture Detail 받은 데이터:', fetchedData);
           setData(fetchedData);

@@ -1,9 +1,11 @@
-import React, { useEffect , useContext} from "react";
+import React, { useEffect , useContext, useState} from "react";
 import { StyleSheet, Platform,Text,View, Image, Linking, ImageBackground, Alert} from "react-native";
 import styled from "styled-components/native";
 import { TopSec} from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
+import { useDomain } from "../context/domaincontext";
+import axios from 'axios';
 
 const Container = styled.ScrollView`
   padding: 0 20px;
@@ -68,15 +70,29 @@ const styles = StyleSheet.create({
 const CSCenter =  ({ navigation }) => {
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
   const { userNm, updateUserNm  } = useContext(UserContext);
+  const { domain } = useDomain();
 
+  //교육원 정보 가져오기
+  const [phone, setPhone] = useState("");
+  const [kakaoUrl, setKakaoUrl] = useState("");
+
+  useEffect(() => {
+    updateUserNm();
+    axios.get(`${domain}/mobile/site_info.php`)
+      .then((response) => {
+        setPhone(response.data.phone);
+        setKakaoUrl(response.data.kakaoUrl);
+      })
+      .catch((error) => console.error("API 요청 오류:", error));
+  }, [domain]);
 
   useEffect(() => {
     updateUserNm();
   }, []);
 
   //전화연결
-  const handleCall = (phoneNumber) => {
-    const url = `tel:${phoneNumber}`;
+  const handleCall = () => {
+    const url = `tel:${phone}`;
     Linking.openURL(url).catch(err => {
       console.error("Failed to make a call", err);
       Alert.alert("오류", "전화 연결에 실패했습니다.");
@@ -84,8 +100,8 @@ const CSCenter =  ({ navigation }) => {
   };
 
   //카톡연결
-  const handleLinkOpen = (url) => {
-    Linking.openURL(url).catch(err => {
+  const handleLinkOpen = () => {
+    Linking.openURL(`${kakaoUrl}`).catch(err => {
       console.error("Failed to open URL", err);
       Alert.alert("오류", "링크를 여는 데 실패했습니다.");
     });
@@ -105,14 +121,14 @@ const CSCenter =  ({ navigation }) => {
               <BigTxt>무엇을 도와드릴까요?</BigTxt>
               <MidTxt>고객님과의 빠르고 정확한 상담을 약속합니다.</MidTxt>
            </TopWrap>
-           <Button style={styles.shadow} onPress={() => handleCall('0312174002')}>
+           <Button style={styles.shadow}  onPress={handleCall}>
               <ImgWrap><Image source={require('../../assets/csicon1.png')}/></ImgWrap>
               <View>
                 <MidTxt>전화 연결</MidTxt>
-                <SmallTxt>031-217-4002로 전화를 연결 합니다.</SmallTxt>
+                <SmallTxt>{phone}로 전화를 연결 합니다.</SmallTxt>
               </View>
            </Button>
-           <Button style={styles.shadow} onPress={() => handleLinkOpen('https://pf.kakao.com/_kEcWxj/chat')}>
+           <Button style={styles.shadow} onPress={handleLinkOpen}>
               <ImgWrap><Image source={require('../../assets/csicon2.png')}/></ImgWrap>
               <View>
                 <MidTxt>카카오톡 상담</MidTxt>

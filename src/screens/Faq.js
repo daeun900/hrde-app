@@ -5,6 +5,7 @@ import { TopSec} from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
 import { Fontisto } from '@expo/vector-icons';
+import { useDomain } from "../context/domaincontext";
 import axios from 'axios';
 
 const Container = styled.ScrollView`
@@ -64,6 +65,7 @@ const Faq =  ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [faqArray, setFaqArray] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
+  const { domain } = useDomain();
 
   useEffect(() => {
     updateUserNm();
@@ -73,7 +75,7 @@ const Faq =  ({ navigation }) => {
   //카테고리 가져오기
   const fetchFaqs = async () => {
     try {
-      const response = await axios.get('https://hrdelms.com/mobile/faq_array.php'); 
+      const response = await axios.get(`${domain}/mobile/faq_array.php`); 
       setFaqArray(response.data.faqArray);
       console.log(faqArray)
     } catch (error) {
@@ -84,7 +86,7 @@ const Faq =  ({ navigation }) => {
   //검색기능
   const searchFaqs = async () => {
     try {
-      const response = await axios.post('https://hrdelms.com/mobile/faq_list.php', {
+      const response = await axios.post(`${domain}/mobile/faq_list.php`, {
         searchedWord: search,
         type: 'S'
       });
@@ -98,7 +100,7 @@ const Faq =  ({ navigation }) => {
   //질문리스트 가져오기
   const fetchCategoryFaqs = async (category) => {
     try {
-      const response = await axios.post('https://hrdelms.com/mobile/faq_list.php', {
+      const response = await axios.post(`${domain}/mobile/faq_list.php`, {
         category: category,
         type: 'C'
       });

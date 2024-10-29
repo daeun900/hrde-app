@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Video } from 'expo-av';
+import { useDomain } from "../context/domaincontext";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RenderHTML from 'react-native-render-html';
@@ -122,6 +123,7 @@ const LecturePlayer = () => {
   const { LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, ProgressStep } = route.params; //학습정보 가져오기
   const [activeTab, setActiveTab] = useState('tab1');
   const [loading, setLoading] = useState(true); 
+  const { domain } = useDomain();
 
   const tabs = [
     { key: 'tab1', title: '학습시간' },
@@ -173,7 +175,7 @@ const LecturePlayer = () => {
       try {
         const modifiedProgressStep = ProgressStep.replace('차시', ''); // "차시" 제거
 
-        const response = await axios.post('https://hrdelms.com/mobile/player.php', {
+        const response = await axios.post(`${domain}/mobile/player.php`, {
           id: userId,
           lectureCode: LectureCode,
           studySeq: StudySeq,
@@ -347,7 +349,7 @@ useEffect(() => {
         // 전송할 데이터 콘솔에 출력
         console.log('Sending the following data to the server:', requestData);
     
-        const response = await axios.post('https://hrdelms.com/mobile/store_progress.php', requestData);
+        const response = await axios.post(`${domain}/mobile/store_progress.php`, requestData);
     
         // 서버 응답 확인
         if (response.data.alert === 'Y') {
@@ -524,7 +526,7 @@ useEffect(() => {
               <ListItem>
                 <View style={{ flexDirection: 'row' }}>
                 <RenderHTML 
-                  contentWidth={contentWidth} 
+                  contentWidth={screenWidth} 
                   source={{ html: Expl01 }}
                 />
                 </View>
@@ -534,7 +536,7 @@ useEffect(() => {
             <ListItem>
                 <View style={{ flexDirection: 'row' }}>
                 <RenderHTML 
-                  contentWidth={contentWidth} 
+                  contentWidth={screenWidth} 
                   source={{ html: Expl02 }}
                 />
                 </View>
@@ -544,7 +546,7 @@ useEffect(() => {
             <ListItem>
                 <View style={{ flexDirection: 'row' }}>
                 <RenderHTML 
-                  contentWidth={contentWidth} 
+                  contentWidth={screenWidth} 
                   source={{ html: Expl03 }}
                 />
                 </View>

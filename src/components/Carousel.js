@@ -48,7 +48,7 @@ const Carousel = ({data}) => {
             }
             return (
               <CarouselItemContainer key={item.key} width={SIZE}  >
-                <CarouselItem source={item.image}/>
+                <CarouselItem source={{ uri: item.image.uri }}/>
               </CarouselItemContainer>
             );
           })}

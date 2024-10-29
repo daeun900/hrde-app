@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useDomain } from './domaincontext';
 
 const LectureContext = createContext();
 
@@ -8,6 +9,8 @@ export const LectureProvider = ({ children }) => {
   const [lectures, setLectures] = useState([]);
   const [progressP, setProgressP] = useState(null); 
   const [loading, setLoading] = useState(true); 
+
+  const { domain } = useDomain();
 
   const fetchLectureData = async () => {
     setLoading(true);
@@ -17,7 +20,7 @@ export const LectureProvider = ({ children }) => {
       if (userData && userData.value) {
         const userId = userData.value;
         console.log('userId 값 ---->', userId);
-        const response = await axios.post("https://hrdelms.com/mobile/lecture_list.php", { id: userId });
+        const response = await axios.post(`${domain}/mobile/lecture_list.php`, { id: userId });
 
         console.log('Server response:', response.data);
         

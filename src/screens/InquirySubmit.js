@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
 import DropDownPicker from 'react-native-dropdown-picker';
 import Canvas from 'react-native-canvas';
+import { useDomain } from "../context/domaincontext";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -61,6 +62,7 @@ const CaptchaCanvas = styled(Canvas)`
 const InquirySubmit = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { userNm, updateUserNm } = useContext(UserContext);
+  const { domain } = useDomain();
 
   useEffect(() => {
     updateUserNm();
@@ -98,7 +100,7 @@ const InquirySubmit = ({ navigation }) => {
 
   useEffect(() => {
     // 문의종류가져오기
-    fetch('https://hrdelms.com/mobile/ask_array.php')
+    fetch(`${domain}/mobile/ask_array.php`)
       .then((response) => response.json())
       .then((data) => {
         if (data.askArray) {
@@ -176,7 +178,7 @@ const InquirySubmit = ({ navigation }) => {
     };
 
     console.log(data);
-    axios.post('https://hrdelms.com/mobile/ask.php', data)
+    axios.post(`${domain}/mobile/ask.php`, data)
       .then((response) => {
         console.log(response.data.result);
         if (response.data.result === 'Y') {

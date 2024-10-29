@@ -11,8 +11,6 @@ const ImageSliderModal = ({ isVisible, onClose }) => {
     require('../../assets/guide02.png'),
     require('../../assets/guide03.png'),
     require('../../assets/guide04.png'),
-    require('../../assets/guide05.png'),
-    require('../../assets/guide06.png'),
   ];
 
   const handleScroll = (event) => {

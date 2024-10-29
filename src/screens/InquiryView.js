@@ -5,6 +5,7 @@ import { TopSec } from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
 import { Entypo } from '@expo/vector-icons';
+import { useDomain } from "../context/domaincontext";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RenderHTML from 'react-native-render-html';
@@ -74,7 +75,8 @@ const NullContainer = styled.View`
 const AccordionItem = ({ question, answer, status, date, idx  }) => {
   const [expanded, setExpanded] = useState(false);
   const [fetchedAnswer, setFetchedAnswer] = useState("");
-  
+  const { domain } = useDomain();
+
   useEffect(() => {
     if (expanded) {
       fetchAnswer();
@@ -84,7 +86,7 @@ const AccordionItem = ({ question, answer, status, date, idx  }) => {
   //답변확인
   const fetchAnswer = async () => {
       try {
-        const response = await axios.post('https://hrdelms.com/mobile/ask_answer.php', { idx });
+        const response = await axios.post(`${domain}/mobile/ask_answer.php`, { idx });
         setFetchedAnswer(response.data.answer);
         console.log(response.data.answer)
       } catch (error) {
@@ -94,9 +96,15 @@ const AccordionItem = ({ question, answer, status, date, idx  }) => {
 
   const contentWidth = Dimensions.get('window').width;
 
+  const handlePress = () => {
+    if (status === "답변완료") {
+      setExpanded(!expanded);
+    }
+  };
+
   return (
     <ItemContainer>
-      <QuestionContainer onPress={() => setExpanded(!expanded)}  activeOpacity={status === '답변완료' ? 0.8 : 1}>
+      <QuestionContainer  onPress={handlePress} activeOpacity={status === '답변완료' ? 0.8 : 1}>
         <QuestionText>
           <FlexBox>
             <Status status={status}>
@@ -131,8 +139,9 @@ const InquiryView = ({ navigation }) => {
   const insets = useSafeAreaInsets(); // 아이폰 노치 문제 해결
   const [data, setData] = useState([]);
   const [userId, setUserId] = useState('');
-
+  const { domain } = useDomain();
   //userID추출
+
   const getUserId = async () => {
     try {
       const idString = await AsyncStorage.getItem('userId');
@@ -154,7 +163,7 @@ const InquiryView = ({ navigation }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.post('https://hrdelms.com/mobile/ask_list.php', {
+        const response = await axios.post(`${domain}/mobile/ask_list.php`, {
           id: userId 
         }, {
           timeout: 10000 

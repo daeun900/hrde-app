@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TopSec} from "../components";
 import { UserContext } from "../context/userContext";
 import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { useDomain } from "../context/domaincontext";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -140,13 +141,14 @@ const LectureDetail = ({ navigation }) => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(''); 
+  const { domain } = useDomain();
 
   //학습정보가져오기
   useEffect(() => {
     const fetchLectureDetail = async () => {
       if (userId) {
         try {
-          const response = await axios.post('https://hrdelms.com/mobile/lecture_detail.php', { seq: Seq, id: userId });
+          const response = await axios.post(`${domain}/mobile/lecture_detail.php`, { seq: Seq, id: userId });
           const fetchedData = response.data;
           console.log('Lecture Detail 받은 데이터:', fetchedData);
           setData(fetchedData);
@@ -296,7 +298,7 @@ const LectureDetail = ({ navigation }) => {
                       <SmallTxt>학습자료_{data.title}.{data.attachFile.slice(-3)}</SmallTxt>
                   </View>
                   <View style={{alignItems:'center'}}>
-                      <YellowButton  onPress={() => handleLinkOpen(`https://hrdelms.com/upload/Course/${data.attachFile}`)} >
+                      <YellowButton  onPress={() => handleLinkOpen(`${domain}/upload/Course/${data.attachFile}`)} >
                         <SmallTxt style={{color:'#fff'}}>다운로드</SmallTxt>
                       </YellowButton>
                   </View>

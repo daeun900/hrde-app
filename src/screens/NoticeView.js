@@ -5,6 +5,7 @@ import { TopSec } from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
 import { WebView } from 'react-native-webview';
+import { useDomain } from "../context/domaincontext";
 import axios from 'axios';
 
 const Container = styled.ScrollView`
@@ -54,11 +55,13 @@ const NoticeView = ({ route}) => {
   const [notice, setNotice] = useState({});
   const webViewRef = useRef(null);
   const { idx } = route.params;
+  const { domain } = useDomain();
+  
   useEffect(() => {
     updateUserNm();
  
     // 서버에서 데이터 가져오기
-    axios.post('https://hrdelms.com/mobile/notice_detail.php', { idx })
+    axios.post(`${domain}/mobile/notice_detail.php`, { idx })
       .then(response => {
         setNotice(response.data);
       })
@@ -94,31 +97,31 @@ const NoticeView = ({ route}) => {
         </TitleWrap>
         <ContentWrap>
           {notice.fileName1 && (
-            <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=1`)}>
+            <FlexBox onPress={() => handleLinkOpen(`${domain}/include/download.php?idx=${idx}&code=Notice&file=1`)}>
               <DownloadIcon source={require('../../assets/download.png')} />
               <SmallTxt>{notice.realFileName1}</SmallTxt>
             </FlexBox>
           )}
           {notice.fileName2 && (
-            <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=2`)}>
+            <FlexBox onPress={() => handleLinkOpen(`${domain}/include/download.php?idx=${idx}&code=Notice&file=2`)}>
               <DownloadIcon source={require('../../assets/download.png')} />
               <SmallTxt>{notice.realFileName2}</SmallTxt>
             </FlexBox>
           )}
           {notice.fileName3 && (
-             <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=3`)}>
+             <FlexBox onPress={() => handleLinkOpen(`${domain}/include/download.php?idx=${idx}&code=Notice&file=3`)}>
                 <DownloadIcon source={require('../../assets/download.png')} />
                 <SmallTxt>{notice.realFileName3}</SmallTxt>
               </FlexBox>
           )}
            {notice.fileName4 && (
-              <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=4`)}>
+              <FlexBox onPress={() => handleLinkOpen(`${domain}/include/download.php?idx=${idx}&code=Notice&file=4`)}>
                 <DownloadIcon source={require('../../assets/download.png')} />
                 <SmallTxt>{notice.realFileName4}</SmallTxt>
               </FlexBox>
           )}
            {notice.fileName5 && (
-              <FlexBox onPress={() => handleLinkOpen(`https://www.hrdelms.com/include/download.php?idx=${idx}&code=Notice&file=5`)}>
+              <FlexBox onPress={() => handleLinkOpen(`${domain}/include/download.php?idx=${idx}&code=Notice&file=5`)}>
                 <DownloadIcon source={require('../../assets/download.png')} />
                 <SmallTxt>{notice.realFileName5}</SmallTxt>
               </FlexBox>

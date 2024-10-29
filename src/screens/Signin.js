@@ -5,9 +5,9 @@ import styled from "styled-components/native";
 import { Button,Image,Input } from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from '@react-navigation/native';
+import { useDomain } from "../context/domaincontext";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 
 const Container = styled.Pressable`
   flex: 1;
@@ -64,6 +64,7 @@ storeData();
 const Signin = ({navigation}) => {
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
   const theme = useContext(ThemeContext);
+  const { domain } = useDomain();
 
   const [id, setID] = useState('');
   const [password, setPassword] = useState('');
@@ -80,12 +81,13 @@ const Signin = ({navigation}) => {
       Alert.alert("비밀번호 입력 확인", "비밀번호가 입력되지 않았습니다.");
     } else {
       try {
-        const response = await axios.post("https://hrdelms.com/mobile/sign_in.php", { id: id, pwd: password });
+        console.log(domain)
+        const response = await axios.post(`${domain}/mobile/sign_in.php`, { id: id, pwd: password });
         const result = response.data.result;
         const name = response.data.name;
         console.log('Server response:', response.data);
         console.log('Result:', result);
-
+        
         if (result === "Y") {
           setSession('userId', id); //아이디 세션 저장
           setSession('userNm', name); //이름 세션 저장
@@ -119,7 +121,7 @@ const Signin = ({navigation}) => {
 
   return (
     <Container insets={insets} onPress={() => Keyboard.dismiss()}>
-     <LogoImg source={{uri: 'https://hrdelms.com/common/img/logo.png'}}   resizeMode="contain" />
+     <LogoImg source={{uri: `${domain}/common/img/logo.png`}}   resizeMode="contain" />
       <BigTxt>당신의 도전을 응원합니다.</BigTxt>
       <SmallTxt>즐거운 강의 시청으로 당신의 직무능력 UP!</SmallTxt>
       <Input 

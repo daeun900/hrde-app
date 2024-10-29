@@ -5,6 +5,7 @@ import { TopSec } from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserContext } from "../context/userContext";
 import { Entypo } from '@expo/vector-icons';
+import { useDomain } from "../context/domaincontext";
 import RenderHTML from 'react-native-render-html';
 import axios from 'axios';
 
@@ -93,6 +94,7 @@ const NullContainer = styled.View`
 const AccordionItem = ({ question, idx, category}) => {
   const [expanded, setExpanded] = useState(false);
   const [answer, setAnswer] = useState("");
+  const { domain } = useDomain();
 
   useEffect(() => {
     if (expanded) {
@@ -103,7 +105,7 @@ const AccordionItem = ({ question, idx, category}) => {
   //답변 가져오기
   const fetchFaqDetail = async () => {
     try {
-      const response = await axios.post('https://hrdelms.com/mobile/faq_detail.php', { idx });
+      const response = await axios.post(`${domain}/mobile/faq_detail.php`, { idx });
       setAnswer(response.data.content);
     } catch (error) {
       console.error("Error fetching FAQ detail:", error);
@@ -149,7 +151,8 @@ const FaqList = ({ route}) => {
   const { userNm, updateUserNm  } = useContext(UserContext);
   const { results = [] } = route.params || {}; // 기본값(undefined)을 빈 배열로 설정
   const [faqArray, setFaqArray] = useState([]);
-
+  const { domain } = useDomain();
+  
   useEffect(() => {
     fetchFaqs();
     updateUserNm();
@@ -158,7 +161,7 @@ const FaqList = ({ route}) => {
   //카테고리명 가져오기
   const fetchFaqs = async () => {
     try {
-      const response = await axios.get('https://hrdelms.com/mobile/faq_array.php');
+      const response = await axios.get(`${domain}/mobile/faq_array.php`);
       setFaqArray(response.data.faqArray);
     } catch (error) {
       console.error(error);

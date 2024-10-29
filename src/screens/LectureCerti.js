@@ -5,10 +5,12 @@ import { BackHandler, Text, View, Image, Alert, Platform, Linking} from "react-n
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
-import axios from 'axios';
+import { useDomain } from "../context/domaincontext";
 import { parseString } from 'react-native-xml2js';
+import axios from 'axios';
 
 const LectureCerti = ({ navigation }) => {
+  const { domain } = useDomain();
 
   useEffect(() => {
     // 뒤로 가기 버튼 핸들러 등록
@@ -80,7 +82,7 @@ const LectureCerti = ({ navigation }) => {
               //입과 본인인증 시
               if (EvalCd  == '00') {
                 try {
-                  await axios.post("https://hrdelms.com/mobile/player_cert_insert.php", {
+                  await axios.post(`${domain}/mobile/player_cert_insert.php`, {
                     id: Id,
                     lectureCode: LectureCode,
                     studySeq: StudySeq,
@@ -105,7 +107,7 @@ const LectureCerti = ({ navigation }) => {
             //입과 외 인증 시 
               else{
                 try {
-                  const response = await axios.post("https://hrdelms.com/mobile/player_captcha_session.php", {
+                  const response = await axios.post(`${domain}/mobile/player_captcha_session.php`, {
                     chapterNum: ChapterNum,
                     lectureCode: LectureCode,
                     studySeq: StudySeq,
@@ -171,7 +173,7 @@ const LectureCerti = ({ navigation }) => {
     }
 
     try {
-      const response = await axios.post('https://hrdelms.com/mobile/create_encoded_data.php', {
+      const response = await axios.post(`${domain}/mobile/create_encoded_data.php`, {
         lectureCode: LectureCode
       });
       setEncData(response.data.encData);  // 서버에서 암호화된 데이터 받음
@@ -239,7 +241,7 @@ const LectureCerti = ({ navigation }) => {
               if (EvalCd === '00') {
                // 입과 본인 인증 시
                 try {
-                  await axios.post("https://hrdelms.com/mobile/player_cert_insert.php", {
+                  await axios.post(`${domain}/mobile/player_cert_insert.php`, {
                     id: Id,
                     lectureCode: LectureCode,
                     studySeq: StudySeq,
@@ -262,7 +264,7 @@ const LectureCerti = ({ navigation }) => {
               } else {
                 // 입과 외 인증
                 try {
-                  await axios.post("https://hrdelms.com/mobile/player_captcha_session.php", {
+                  await axios.post(`${domain}/mobile/player_captcha_session.php`, {
                     chapterNum: ChapterNum,
                     lectureCode: LectureCode,
                     studySeq: StudySeq,

@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { UserContext } from "../context/userContext";
 import { useLectureContext } from '../context/lectureContext';
 import {useLogoutConfirmation} from "../hooks/LogoutConfirmation";
+import { useDomain } from "../context/domaincontext";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -109,6 +110,7 @@ const Home =  ({ navigation }) => {
   const { userNm, updateUserNm  } = useContext(UserContext);
   const [isModalVisible, setModalVisible] = useState(false);
   const triggerLogout = useLogoutConfirmation();
+  const { domain } = useDomain();
 
   const checkLoginStatus = async () => {
     try {
@@ -124,7 +126,7 @@ const Home =  ({ navigation }) => {
         }
       }
       
-      const response = await axios.post('https://hrdelms.com/mobile/sign_in_status.php', {
+      const response = await axios.post(`${domain}/mobile/sign_in_status.php`, {
       });
       handleLoginStatus(response.data.result); 
     } catch (error) {

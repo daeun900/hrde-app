@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLectureContext } from '../context/lectureContext';
+import { useDomain } from "../context/domaincontext";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -11,6 +12,7 @@ export const useLogoutConfirmation = () => {
   const { clearLectures } = useLectureContext();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isLoggingOutRef = useRef(isLoggingOut);
+  const { domain } = useDomain();
 
   useEffect(() => {
     isLoggingOutRef.current = isLoggingOut;
@@ -18,9 +20,9 @@ export const useLogoutConfirmation = () => {
  
   const triggerLogout = (isAutoLogout, alertMessage) => {
     if (isAutoLogout) {
-      autoLogout(navigation, clearLectures, setIsLoggingOut, alertMessage);
+      autoLogout(navigation, clearLectures, setIsLoggingOut, alertMessage, domain);
     } else {
-      confirmLogout(navigation, clearLectures, setIsLoggingOut);
+      confirmLogout(navigation, clearLectures, setIsLoggingOut, domain);
       isAutoLogout=false;
     }
   };
@@ -39,9 +41,9 @@ export const useLogoutConfirmation = () => {
   return triggerLogout;
 };
 
-const handleLogout = async (navigation, clearLectures) => {
+const handleLogout = async (navigation, clearLectures, domain) => {
   try {
-    await axios.post('https://hrdelms.com/mobile/sign_out.php', {});
+    await axios.post(`${domain}/mobile/sign_out.php`, {});
     await AsyncStorage.removeItem('userNm');
     await AsyncStorage.removeItem('userId');
     clearLectures();
@@ -64,9 +66,9 @@ export const prevHandleLogout = (navigation) => {
 };
 
 //자동 로그아웃 구현
-const autoLogout = (navigation, clearLectures, setIsLoggingOut, alertMessage) => {
+const autoLogout = (navigation, clearLectures, setIsLoggingOut, alertMessage, domain) => {
   setIsLoggingOut(true);
-  handleLogout(navigation, clearLectures);
+  handleLogout(navigation, clearLectures, domain);
   
   Alert.alert(
     '자동 로그아웃',
@@ -81,7 +83,7 @@ const autoLogout = (navigation, clearLectures, setIsLoggingOut, alertMessage) =>
     
 };
 
-const confirmLogout = (navigation, clearLectures, setIsLoggingOut) => {
+const confirmLogout = (navigation, clearLectures, setIsLoggingOut, domain) => {
   Alert.alert(
     '로그아웃',
     '로그아웃 하시겠습니까?',
@@ -91,7 +93,7 @@ const confirmLogout = (navigation, clearLectures, setIsLoggingOut) => {
         text: '확인',
         onPress: () => {
           setIsLoggingOut(true);
-          handleLogout(navigation, clearLectures);
+          handleLogout(navigation, clearLectures, domain);
         }
       }
     ],

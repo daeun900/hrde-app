@@ -6,10 +6,12 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { Home, Etc, LectureList, LectureDetail, LectureCerti, LecturePlayer, CScenter, Inquiry, InquiryComplete, Notification,Notice,NoticeView, Faq, FaqList } from "../screens";
 import { Feather } from '@expo/vector-icons';
+import { useDomain } from "../context/domaincontext";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 const TopTab = createMaterialTopTabNavigator();
+
 
 const TabIcon = ({ name, focused }) => {
     const theme = useContext(ThemeContext);
@@ -17,6 +19,7 @@ const TabIcon = ({ name, focused }) => {
 };
 
 const TabNav = () => {
+    const { domain } = useDomain();
     return (
         <Tab.Navigator
             screenOptions={{
@@ -35,7 +38,7 @@ const TabNav = () => {
         >
             <Tab.Screen name="Home" component={Home} 
                 options={{
-                    headerTitle: props => (<Image style={{ width: 158, height: 28 }} source={{uri: 'https://hrdelms.com/common/img/logo.png'}}   resizeMode="contain" />),
+                    headerTitle: props => (<Image style={{ width: 158, height: 28 }} source={{uri: `${domain}/common/img/logo.png`}}   resizeMode="contain" />),
                     headerTitleAlign: "center",
                     shadowOpacity: 0,
                     headerShadowVisible: false,

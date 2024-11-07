@@ -186,8 +186,6 @@ const LectureDetail = ({ navigation }) => {
     );
   
   
-
-
 //학습자료 다운로드
   const handleLinkOpen = (url) => {
     Linking.openURL(url).catch(err => {
@@ -271,7 +269,7 @@ const LectureDetail = ({ navigation }) => {
                       )}
                   </View>
                    <View style={{alignItems:'center'}}>
-                   {item[2] === 'Y' && (
+                   {item[1] === 'A' && item[2] === 'Y' && (
                       <>
                        <YellowButton 
                           onPress={() => {

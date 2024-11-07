@@ -143,39 +143,48 @@ const LectureDetail = ({ navigation }) => {
   const [userId, setUserId] = useState(''); 
   const { domain } = useDomain();
 
-  //학습정보가져오기
-  useEffect(() => {
-    const fetchLectureDetail = async () => {
+    // 강의 상세정보 가져오기
+    const fetchLectureDetail = useCallback(async () => {
       if (userId) {
+        setLoading(true); // 로딩 시작
         try {
-          const response = await axios.post(`${domain}/mobile/lecture_detail.php`, { seq: Seq, id: userId });
+          const response = await axios.post(`${domain}/mobile/lecture_detail.php`, {
+            seq: Seq,
+            id: userId,
+          });
           const fetchedData = response.data;
-          console.log('Lecture Detail 받은 데이터:', fetchedData);
+          console.log("Lecture Detail 받은 데이터:", fetchedData);
           setData(fetchedData);
         } catch (error) {
-          console.error('Error fetching lecture details:', error);
+          console.error("Error fetching lecture details:", error);
         } finally {
-          setLoading(false);
+          setLoading(false); // 로딩 완료
         }
       }
-    };
+    }, [Seq, userId, domain]);
   
-    const getUserId = async () => {
+    // userId 가져오기
+    const getUserId = useCallback(async () => {
       try {
-        const idString = await AsyncStorage.getItem('userId');
+        const idString = await AsyncStorage.getItem("userId");
         if (idString !== null) {
           const idObject = JSON.parse(idString);
           const userIdValue = idObject.value;
           setUserId(userIdValue);
-          fetchLectureDetail(); // userId 가져온 후에 fetchLectureDetail 실행
         }
       } catch (error) {
-        console.error('Failed to fetch the user ID:', error);
+        console.error("Failed to fetch the user ID:", error);
       }
-    };
+    }, []);
   
-    getUserId();
-  }, [Seq, userId]);  
+    // 페이지에 포커스가 맞춰질 때마다 데이터 새로고침
+    useFocusEffect(
+      useCallback(() => {
+        getUserId(); // userId를 가져오는 작업 실행
+        fetchLectureDetail();
+      }, [getUserId, fetchLectureDetail])
+    );
+  
   
 
 
@@ -309,10 +318,6 @@ const LectureDetail = ({ navigation }) => {
       </View>
     );
   }
-
-
-
- 
 };
 
 export default LectureDetail;

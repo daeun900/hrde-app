@@ -6,7 +6,7 @@ import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Video } from 'expo-av';
+import { Video, Audio } from 'expo-av';
 import { useDomain } from "../context/domaincontext";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -115,7 +115,9 @@ const LoaderContainer = styled.View`
   align-items: center;
   background-color: #333;
 `;
-
+Audio.setAudioModeAsync({
+  playsInSilentModeIOS: true,  // iOS 무음 모드에서도 소리 재생
+});
 
 const LecturePlayer = () => {
   const insets = useSafeAreaInsets(); // 아이폰 노치 문제 해결
@@ -145,6 +147,7 @@ const LecturePlayer = () => {
   const [contentsMobilePage, setContentsMobilePage] = useState(''); // 총 페이지 수
   const [contentsMobileNowPage, setContentsMobileNowPage] = useState(1); // 현재 페이지
   const [playPath, setPlayPath] = useState(''); // 영상 url
+  const [isAuthRequired, setIsAuthRequired] = useState(true); // 본인 인증 필요 여부
 
   const [userId, setUserId] = useState('');
 
@@ -189,7 +192,7 @@ const LecturePlayer = () => {
         const data = response.data;
         setContentsName(data.contentsName); //과정명
         setContentsTitle(data.contentsTitle); //차시명
-        setPlayPath(data.playPath); //동영상url
+        //setPlayPath(data.playPath); //동영상url
         setProfessor(data.professor);//강사명
         setExpl01(data.exp01)//차시목표
         setExpl02(data.exp02)//훈련내용
@@ -201,102 +204,84 @@ const LecturePlayer = () => {
         setContentsMobilePage(data.contentsMobilePage); //총 페이지 수
         
         console.log('Player 받은 데이터:', response.data)
-        setTimeout(() => {
 
         /////////////////////////////////////////// 본인인증 관련 로직  ///////////////////////////////////////////////////
-        if (data.needMobileAuth === 'Y') {
-          Alert.alert(
-            '본인인증 필요', 
-            '과정입과 시 본인인증이 필요합니다.', 
-            [
-              { text: '확인', onPress: () => navigation.navigate('LectureCerti', { 
-                Id: userId,
-                LectureCode: LectureCode,
-                StudySeq: StudySeq,
-                ChapterSeq: ChapterSeq,
-                ContentsIdx: ContentsIdx,
-                PlayMode: PlayMode,
-                ProgressStep: modifiedProgressStep,
-
-                ContentsName: data.contentsName, 
-                UserName: data.name,  
-                UserMobile: data.userMobile,
-                SessionId: data.sessionId, 
-                AgtId: data.captcha_agent_id, 
-                SessionId: data.sessionId, 
-                UserIp: data.userIP, 
-                LectureTermeIdx: data.lectureTermeIdx,
-                EvalCd: data.evalCd,
-                EvalType: data.evalType,
-                ChapterNumberZero: data.chapterNumberZero,
-
-                TrnId:data.trnID
-              }) }
-            ],
-            { cancelable: false }
-          );
-        } else if (data.needMobileAuth2 === "Y") {
-   
-          Alert.alert(
-            '본인인증 필요', 
-            '학습 진행 시 본인인증이 필요합니다.', 
-            [
-              { text: '확인', onPress: () => navigation.navigate('LectureCerti', { 
-                Id: userId,
-                LectureCode: LectureCode,
-                StudySeq: StudySeq,
-                ChapterSeq: ChapterSeq,
-                ContentsIdx: ContentsIdx,
-                PlayMode: PlayMode,
-                ProgressStep: modifiedProgressStep,
-
-                ContentsName: data.contentsName, 
-                UserName: data.name,  
-                UserMobile: data.userMobile,
-                SessionId: data.sessionId, 
-                AgtId: data.captcha_agent_id, 
-                UserIp: data.userIP, 
-                LectureTermeIdx: data.lectureTermeIdx,
-                EvalCd: data.evalCd,
-                EvalType: data.evalType,
-                ChapterNumberZero: data.chapterNumberZero,
-
-                ChapterNum: data.chapterNum
-               }) }
-            ],
-            { cancelable: false }
-          );
-        }
-
-        // 차시 수강 제한 경고
-        if (data.alert === 'over8Chapters') {
-          Alert.alert(
-            '경고', 
-            '하루 8개 차시까지만 수강이 가능합니다.', 
-            [
-              { text: '확인', onPress: () => navigation.goBack() } 
-            ],
-            { cancelable: false }
-          );
-        }
+        setTimeout(() => {
+          if (data.alert === 'over8Chapters') {
+            Alert.alert(
+              '경고', 
+              '하루 8개 차시까지만 수강이 가능합니다.', 
+              [
+                { text: '확인', onPress: () => navigation.goBack() } 
+              ],
+              { cancelable: false }
+            );
+          }
+          else{
+            if (data.needMobileAuth === 'Y' || data.needMobileAuth2 === 'Y') {
+              setIsAuthRequired(true);
+              Alert.alert(
+                '본인인증 필요', 
+                data.needMobileAuth === 'Y' ? '과정입과 시 본인인증이 필요합니다.' : '학습 진행 시 본인인증이 필요합니다.',
+                [
+                  { 
+                    text: '확인', 
+                    onPress: () => navigation.navigate('LectureCerti', { 
+                      Id: userId,
+                      LectureCode: LectureCode,
+                      StudySeq: StudySeq,
+                      ChapterSeq: ChapterSeq,
+                      ContentsIdx: ContentsIdx,
+                      PlayMode: PlayMode,
+                      ProgressStep: modifiedProgressStep,
+                      ContentsName: data.contentsName, 
+                      UserName: data.name,  
+                      UserMobile: data.userMobile,
+                      SessionId: data.sessionId, 
+                      AgtId: data.captcha_agent_id, 
+                      UserIp: data.userIP, 
+                      LectureTermeIdx: data.lectureTermeIdx,
+                      EvalCd: data.evalCd,
+                      EvalType: data.evalType,
+                      ChapterNumberZero: data.chapterNumberZero,
+                      ChapterNum: data.chapterNum,
+                      TrnId: data.trnID
+                    }) 
+                  }
+                ],
+                { cancelable: false }
+              );
+            } else {
+              setPlayPath(data.playPath); // 본인 인증이 필요하지 않을 때만 playPath 설정
+            }
+          }
       }, 300);
-
-        console.log('Video URL:', data.playPath)
-        console.log('Study Time:', data.studyTime)
-        //console.log('Last Study:', data.lastStudy)
 
         setLoading(false);
 
       } catch (error) {
         console.error('Error fetching data:', error);
         setLoading(true);
-      } 
+      }
     };
 
     fetchData();
   }, [userId, LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, ProgressStep]);
 
+  // 본인 인증 완료 후 호출될 함수 (강의 페이지로 돌아온 후 playPath 설정)
+  const onAuthComplete = () => {
+    if (isAuthRequired) {
+      setPlayPath(playPath); // playPath를 이제 설정하여 재생 가능하게 함
+      setIsAuthRequired(false); // 인증 완료 후 자동 재생 가능
+    }
+  };
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', onAuthComplete); 
+    return unsubscribe;
+  }, [navigation]);
+
+      
 ////////////////////////////////////////////// 학습시간 체크 //////////////////////////////////////////////////////////////\
 const [isPlaying, setIsPlaying] = useState(false);
 const [studyTime, setStudyTime] = useState(0); //저장된 학습시간
@@ -451,6 +436,7 @@ useEffect(() => {
     const videoHeight = (screenWidth * 650) / 1200;
 
   return (
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
     <View style={{ flex: 1 }}>
         {loading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -468,8 +454,8 @@ useEffect(() => {
         useNativeControls  // 기본 플레이어 UI 사용
         resizeMode="contain"  // 비디오 화면 조정 모드
         isLooping={false}  // 반복 재생 여부
-        shouldPlay={true} //자동재생 활성화
-        onPlaybackStatusUpdate={handlePlaybackStatusUpdate}  // 재생 상태 업데이트
+        shouldPlay={!isAuthRequired} //자동재생 활성화
+        onPlaybackStatusUpdate={(status) => setIsPlaying(status.isPlaying)}  // 재생 상태 업데이트
         onLoadStart={handleLoadStart}
         onReadyForDisplay={handleReadyForDisplay} //재생준비완료
       />
@@ -558,6 +544,7 @@ useEffect(() => {
       </>
       )}
     </View>
+    </ScrollView>
   );
 };
 

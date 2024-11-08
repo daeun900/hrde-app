@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components/native";
 import { Text, View, FlatList, TouchableOpacity, ScrollView, Dimensions, Alert, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -146,7 +146,7 @@ const LecturePlayer = () => {
   const [completeTime, setCompleteTime] = useState('');
   const [contentsMobilePage, setContentsMobilePage] = useState(''); // 총 페이지 수
   const [contentsMobileNowPage, setContentsMobileNowPage] = useState(1); // 현재 페이지
-  const [playPath, setPlayPath] = useState(''); // 영상 url
+  const playPath = useRef(''); // 영상 url
   const [isAuthRequired, setIsAuthRequired] = useState(true); // 본인 인증 필요 여부
 
   const [userId, setUserId] = useState('');
@@ -171,10 +171,11 @@ const LecturePlayer = () => {
   };
 
   ///////////////////////////////서버에서 영상 데이터 받아오기///////////////////////////////
-  useEffect(() => { 
-    getUserId();
+  useFocusEffect(
+    React.useCallback(() => {
+      getUserId();
     const fetchData = async () => { 
-      if (!userId) return;  // userId가 없으면 fetchData 실행하지 않음
+      if (!userId || playPath.currenth) return;  // userId가 없거나 저장된 playpath있을 시 fetchData 실행하지 않음
       try {
         const modifiedProgressStep = ProgressStep.replace('차시', ''); // "차시" 제거
 
@@ -251,12 +252,12 @@ const LecturePlayer = () => {
                 ],
                 { cancelable: false }
               );
-            } else {
-              setPlayPath(data.playPath); // 본인 인증이 필요하지 않을 때만 playPath 설정
+            } else if (!playPath.current) {
+              playPath.current = data.playPath; // 본인 인증이 필요하지 않을 때만 playPath 설정
+              setIsAuthRequired(false); //본인인증 필요하지 않음
             }
           }
       }, 300);
-
         setLoading(false);
 
       } catch (error) {
@@ -266,21 +267,18 @@ const LecturePlayer = () => {
     };
 
     fetchData();
-  }, [userId, LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, ProgressStep]);
-
-  // 본인 인증 완료 후 호출될 함수 (강의 페이지로 돌아온 후 playPath 설정)
-  const onAuthComplete = () => {
-    if (isAuthRequired) {
-      setPlayPath(playPath); // playPath를 이제 설정하여 재생 가능하게 함
-      setIsAuthRequired(false); // 인증 완료 후 자동 재생 가능
+    if (video.current) {
+      video.current.playAsync();  // 비디오 자동 재생
     }
-  };
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', onAuthComplete); 
-    return unsubscribe;
-  }, [navigation]);
-
+    // 페이지가 포커스를 잃으면 비디오 재생을 멈춤
+    return () => {
+      if (video.current) {
+        video.current.pauseAsync();  // 비디오 일시정지
+      }
+    };
+  }, [userId, LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, ProgressStep])
+);
       
 ////////////////////////////////////////////// 학습시간 체크 //////////////////////////////////////////////////////////////\
 const [isPlaying, setIsPlaying] = useState(false);
@@ -363,6 +361,7 @@ useEffect(() => {
     //////////////////////////////////////////video 태그 관련 //////////////////////////////////////////////////
 
     const video = useRef(null);
+    const [isNextLesson, setIsNextLesson] = useState(false);
 
     //영상 캐시
     const getVideoUrl = (playPath) => `${playPath}?t=${new Date().getTime()}`;
@@ -370,35 +369,35 @@ useEffect(() => {
     //이전차시버튼
     const onPrevButtonPress = () => {
       let nextPage = contentsMobileNowPage - 1;
-
-      const playPathArray = playPath.split('/');
+      const playPathArray = playPath.current.split('/');
       const fileName = playPathArray[playPathArray.length - 1];
       const fileNameSplit = fileName.split('.');
       const fileNameFirst = fileNameSplit[0];
       const fileNameFirstLeft = fileNameFirst.substr(0, fileNameFirst.length - 2);
-  
+    
       let nextFileName = nextPage > 9 ? `${fileNameFirstLeft}${nextPage}.mp4` : `${fileNameFirstLeft}0${nextPage}.mp4`;
-      let nextPlayPath = playPath.replace(fileName, nextFileName);
-  
+      let nextPlayPath = playPath.current.replace(fileName, nextFileName);
+    
       setContentsMobileNowPage(nextPage);
-      setPlayPath(getVideoUrl(nextPlayPath)); 
+      playPath.current = getVideoUrl(nextPlayPath); // playPath를 업데이트
+      setIsNextLesson(true); 
     };
   
     //다음차시버튼
     const onNextButtonPress = () => {
       let nextPage = contentsMobileNowPage + 1;
-
-      const playPathArray = playPath.split('/');
+      const playPathArray = playPath.current.split('/');
       const fileName = playPathArray[playPathArray.length - 1];
       const fileNameSplit = fileName.split('.');
       const fileNameFirst = fileNameSplit[0];
       const fileNameFirstLeft = fileNameFirst.substr(0, fileNameFirst.length - 2);
-  
+    
       let nextFileName = nextPage > 9 ? `${fileNameFirstLeft}${nextPage}.mp4` : `${fileNameFirstLeft}0${nextPage}.mp4`;
-      let nextPlayPath = playPath.replace(fileName, nextFileName);
-  
+      let nextPlayPath = playPath.current.replace(fileName, nextFileName);
+    
       setContentsMobileNowPage(nextPage);
-      setPlayPath(getVideoUrl(nextPlayPath)); 
+      playPath.current = getVideoUrl(nextPlayPath);
+      setIsNextLesson(true);
     };
 
     //영상재생 상태관리
@@ -416,18 +415,11 @@ useEffect(() => {
   
       // 비디오 로드 후 자동 재생
       if (video.current) {
-        await video.current.setPositionAsync(0);
+        if (isNextLesson) {
+          await video.current.setPositionAsync(0);  // 0초로 설정
+          setIsNextLesson(false);  // 다음 차시 상태 초기화
+        }
         await video.current.playAsync();  // 비디오 자동 재생
-      }
-    };
-
-    const handlePlaybackStatusUpdate = (status) => {
-      
-      setStatus(status);
-      if (status.isPlaying) {
-        setIsPlaying(true);
-      } else {
-        setIsPlaying(false);
       }
     };
     
@@ -450,7 +442,7 @@ useEffect(() => {
         <Video
         ref={video}
         style={{ width: screenWidth, height:videoHeight }}
-        source={{ uri: playPath }}  // 비디오 URL 설정
+        source={{ uri: playPath.current }}  // 비디오 URL 설정
         useNativeControls  // 기본 플레이어 UI 사용
         resizeMode="contain"  // 비디오 화면 조정 모드
         isLooping={false}  // 반복 재생 여부

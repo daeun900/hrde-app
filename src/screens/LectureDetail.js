@@ -267,6 +267,9 @@ const LectureDetail = ({ navigation }) => {
                       {item[1] === 'D' && (
                         <SmallTxt style={{ color: '#FF5733' }}>과제는 PC에서 가능합니다.</SmallTxt>
                       )}
+                      {item[1] === 'E' && (
+                    <SmallTxt style={{ color: '#FF5733' }}>토론참여는 PC에서 가능합니다.</SmallTxt>
+                      )}
                   </View>
                    <View style={{alignItems:'center'}}>
                    {item[1] === 'A' && item[2] === 'Y' && (

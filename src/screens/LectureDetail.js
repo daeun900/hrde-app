@@ -194,6 +194,8 @@ const LectureDetail = ({ navigation }) => {
     });
   };
 
+  const itemsWithNum = data && data.chapterInfo ? data.chapterInfo.filter(item => item[1] === 'A') : [];
+
 
   if (loading) {
     return (
@@ -254,7 +256,7 @@ const LectureDetail = ({ navigation }) => {
                 data.chapterInfo.map((item, index) => (
                 <ListItem key={index}>
                   <View style={{flexDirection:'row', width: item[2] === 'Y' ? '65%' : '100%'}}> 
-                      <Num>{index + 1}</Num>
+                      {item[1] === 'A' && <Num>{itemsWithNum.indexOf(item) + 1}</Num>}
                       {item[1] === 'A' && (
                       <SmallTxt>{item[0]}</SmallTxt>
                      )}

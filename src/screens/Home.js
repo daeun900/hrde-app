@@ -10,6 +10,7 @@ import {useLogoutConfirmation} from "../hooks/LogoutConfirmation";
 import { useDomain } from "../context/domaincontext";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Device from 'expo-device';
 
 const Container = styled.ScrollView`
   padding: 0 20px;
@@ -134,12 +135,23 @@ const Home =  ({ navigation }) => {
     }
   };
 
+
+// 디바이스 고유 ID 가져오기
+const getDeviceId = async () => {
+  if (Device.isDevice) {
+    return Device.osInternalBuildId || Device.modelId || 'unknown_device';
+  }
+  return 'unknown_device';
+};
+
   //자동로그아웃
-  const handleLoginStatus = (status) => {
+  const handleLoginStatus = async (status, currentDeviceId) => {
+    const deviceId = await getDeviceId();
+
     if (status === 'Empty') {
       triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
     } else 
-    if (status === 'N') {
+    if (status === 'N'&& currentDeviceId !== deviceId) {
       triggerLogout(true, '다른 기기에서 로그인하여 로그아웃 처리됩니다.');
     }
   };
@@ -173,7 +185,7 @@ const Home =  ({ navigation }) => {
         <TopSec name={userNm} borderBottomWidth="0px"/>
         <Container contentContainerStyle={{ paddingBottom: insets.bottom + 20}}>
         {loading ? (  // 로딩 중일 때는 로딩 인디케이터 표시
-            <ActivityIndicator size="large" color="#FFD600" />
+            <ActivityIndicator size={40} color="#FFD600" />
           ) : (
             <>
             <CarouselBox style={{width:width}}>

@@ -264,7 +264,7 @@ const InquirySubmit = ({ navigation }) => {
       style={{ flex: 1 }}
     >
       <FlatList
-        data={[{ key: 'inquiry' }]}
+        data={[{ id: 'inquiry', key: 'inquiry' }]}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}
       />

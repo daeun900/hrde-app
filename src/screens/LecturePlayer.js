@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect} from "react";
+import { useEvent, useEventListener} from 'expo';
 import styled from "styled-components/native";
 import { Text, View, FlatList, TouchableOpacity, ScrollView, Dimensions, Alert, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,7 +7,7 @@ import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Video, Audio } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useDomain } from "../context/domaincontext";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -115,9 +116,6 @@ const LoaderContainer = styled.View`
   align-items: center;
   background-color: #333;
 `;
-Audio.setAudioModeAsync({
-  playsInSilentModeIOS: true,  // iOS 무음 모드에서도 소리 재생
-});
 
 const LecturePlayer = () => {
   const insets = useSafeAreaInsets(); // 아이폰 노치 문제 해결
@@ -148,11 +146,8 @@ const LecturePlayer = () => {
   const [contentsMobileNowPage, setContentsMobileNowPage] = useState(1); // 현재 페이지
   const playPath = useRef(''); // 영상 url
   const [isAuthRequired, setIsAuthRequired] = useState(true); // 본인 인증 필요 여부
-
   const [userId, setUserId] = useState('');
-
   const [lastStudy, setLastStudy] = useState(''); //재생중인 차시
- //const [playURL, setPlayURL] = useState(''); //재생중인 차시
 
   const navigation = useNavigation();
 
@@ -193,7 +188,6 @@ const LecturePlayer = () => {
         const data = response.data;
         setContentsName(data.contentsName); //과정명
         setContentsTitle(data.contentsTitle); //차시명
-        //setPlayPath(data.playPath); //동영상url
         setProfessor(data.professor);//강사명
         setExpl01(data.exp01)//차시목표
         setExpl02(data.exp02)//훈련내용
@@ -267,21 +261,82 @@ const LecturePlayer = () => {
     };
 
     fetchData();
-    if (video.current) {
-      video.current.playAsync();  // 비디오 자동 재생
-    }
 
-    // 페이지가 포커스를 잃으면 비디오 재생을 멈춤
-    return () => {
-      if (video.current) {
-        video.current.pauseAsync();  // 비디오 일시정지
-      }
-    };
   }, [userId, LectureCode, StudySeq, ChapterSeq, ContentsIdx, PlayMode, ProgressStep])
 );
-      
+
+    //////////////////////////////////////////video 태그 관련 //////////////////////////////////////////////////
+    //영상 캐시
+    const getVideoUrl = (playPath) => `${playPath}?t=${new Date().getTime()}`;
+
+    //이전차시버튼
+    const onPrevButtonPress = () => {
+      let nextPage = contentsMobileNowPage - 1;
+      const playPathArray = playPath.current.split('/');
+      const fileName = playPathArray[playPathArray.length - 1];
+      const fileNameSplit = fileName.split('.');
+      const fileNameFirst = fileNameSplit[0];
+      const fileNameFirstLeft = fileNameFirst.substr(0, fileNameFirst.length - 2);
+    
+      let nextFileName = nextPage > 9 ? `${fileNameFirstLeft}${nextPage}.mp4` : `${fileNameFirstLeft}0${nextPage}.mp4`;
+      let nextPlayPath = playPath.current.replace(fileName, nextFileName);
+    
+      setContentsMobileNowPage(nextPage);
+      playPath.current = getVideoUrl(nextPlayPath); // playPath를 업데이트
+    };
+  
+    //다음차시버튼
+    const onNextButtonPress = () => {
+      let nextPage = contentsMobileNowPage + 1;
+      const playPathArray = playPath.current.split('/');
+      const fileName = playPathArray[playPathArray.length - 1];
+      const fileNameSplit = fileName.split('.');
+      const fileNameFirst = fileNameSplit[0];
+      const fileNameFirstLeft = fileNameFirst.substr(0, fileNameFirst.length - 2);
+    
+      let nextFileName = nextPage > 9 ? `${fileNameFirstLeft}${nextPage}.mp4` : `${fileNameFirstLeft}0${nextPage}.mp4`;
+      let nextPlayPath = playPath.current.replace(fileName, nextFileName);
+    
+      setContentsMobileNowPage(nextPage);
+      playPath.current = getVideoUrl(nextPlayPath);
+    };
+
+    //video width, height
+    const screenWidth = Dimensions.get('window').width;
+    const videoHeight = (screenWidth * 675) / 1200;
+
+    //video 상태 관리
+    const player = useVideoPlayer(playPath.current , player => {
+      player.loop = false;
+      player.play();
+    });
+
+    const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+
+    useEffect(() => {
+      console.log('Is the video playing?', isPlaying);
+    }, [isPlaying]);
+
+    const [status, setPlayerStatus] = useState({})
+    const [errors, setPlayerError] = useState({})
+
+    useEventListener(player, 'statusChange', ({ status, error }) => {
+      setPlayerStatus(status);
+      setPlayerError(error);
+      console.log('Player status changed: ', status);
+      console.log('Player error: ', error);
+    });
+
+    const [loadingVideo, setLoadingVideo] = useState(true); 
+
+    useEffect(() => {
+      if(status == 'readyToPlay'){
+        setLoadingVideo(false);
+      }
+    }, [status]);
+ 
+
 ////////////////////////////////////////////// 학습시간 체크 //////////////////////////////////////////////////////////////\
-const [isPlaying, setIsPlaying] = useState(false);
 const [studyTime, setStudyTime] = useState(0); //저장된 학습시간
 const [formattedTime, setFormattedTime] = useState('00:00:00'); //저장된 학습시간
 
@@ -343,7 +398,6 @@ useEffect(() => {
       }
     };
     
-    
     //학습시간 display
     const formatTime = (time) => {
       let curmin = Math.floor(time / 60);
@@ -358,102 +412,30 @@ useEffect(() => {
       return `${curhour2}:${curmin2}:${cursec2}`;
     };
 
-    //////////////////////////////////////////video 태그 관련 //////////////////////////////////////////////////
-
-    const video = useRef(null);
-    const [isNextLesson, setIsNextLesson] = useState(false);
-
-    //영상 캐시
-    const getVideoUrl = (playPath) => `${playPath}?t=${new Date().getTime()}`;
-
-    //이전차시버튼
-    const onPrevButtonPress = () => {
-      let nextPage = contentsMobileNowPage - 1;
-      const playPathArray = playPath.current.split('/');
-      const fileName = playPathArray[playPathArray.length - 1];
-      const fileNameSplit = fileName.split('.');
-      const fileNameFirst = fileNameSplit[0];
-      const fileNameFirstLeft = fileNameFirst.substr(0, fileNameFirst.length - 2);
-    
-      let nextFileName = nextPage > 9 ? `${fileNameFirstLeft}${nextPage}.mp4` : `${fileNameFirstLeft}0${nextPage}.mp4`;
-      let nextPlayPath = playPath.current.replace(fileName, nextFileName);
-    
-      setContentsMobileNowPage(nextPage);
-      playPath.current = getVideoUrl(nextPlayPath); // playPath를 업데이트
-      setIsNextLesson(true); 
-    };
-  
-    //다음차시버튼
-    const onNextButtonPress = () => {
-      let nextPage = contentsMobileNowPage + 1;
-      const playPathArray = playPath.current.split('/');
-      const fileName = playPathArray[playPathArray.length - 1];
-      const fileNameSplit = fileName.split('.');
-      const fileNameFirst = fileNameSplit[0];
-      const fileNameFirstLeft = fileNameFirst.substr(0, fileNameFirst.length - 2);
-    
-      let nextFileName = nextPage > 9 ? `${fileNameFirstLeft}${nextPage}.mp4` : `${fileNameFirstLeft}0${nextPage}.mp4`;
-      let nextPlayPath = playPath.current.replace(fileName, nextFileName);
-    
-      setContentsMobileNowPage(nextPage);
-      playPath.current = getVideoUrl(nextPlayPath);
-      setIsNextLesson(true);
-    };
-
-    //영상재생 상태관리
-    const [status, setStatus] = useState({});
-    const [loadingVideo, setLoadingVideo] = useState(true); 
-
-  // 비디오 로딩
-    const handleLoadStart = () => {
-      setLoadingVideo(true);
-      setIsPlaying(false);
-    }
-
-    const handleReadyForDisplay = async () => {
-      setLoadingVideo(false);  // 로딩 상태를 false로 설정
-  
-      // 비디오 로드 후 자동 재생
-      if (video.current) {
-        if (isNextLesson) {
-          await video.current.setPositionAsync(0);  // 0초로 설정
-          setIsNextLesson(false);  // 다음 차시 상태 초기화
-        }
-        await video.current.playAsync();  // 비디오 자동 재생
-      }
-    };
-    
-    //video width, height
-    const screenWidth = Dimensions.get('window').width;
-    const videoHeight = (screenWidth * 650) / 1200;
-
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
     <View style={{ flex: 1 }}>
         {loading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#0000ff" />
+            <ActivityIndicator size={40} color="#0000ff" />
           </View>
         ) : (
         <>
       <Title>[{ContentsName}]</Title>
       <SubTitle>[{contentsTitle}]</SubTitle>
       <View style={{position:'relative'}}>
-        <Video
-        ref={video}
-        style={{ width: screenWidth, height:videoHeight }}
-        source={{ uri: playPath.current }}  // 비디오 URL 설정
-        useNativeControls  // 기본 플레이어 UI 사용
-        resizeMode="contain"  // 비디오 화면 조정 모드
-        isLooping={false}  // 반복 재생 여부
-        shouldPlay={!isAuthRequired} //자동재생 활성화
-        onPlaybackStatusUpdate={(status) => setIsPlaying(status.isPlaying)}  // 재생 상태 업데이트
-        onLoadStart={handleLoadStart}
-        onReadyForDisplay={handleReadyForDisplay} //재생준비완료
-      />
+        <VideoView 
+        width={screenWidth} 
+        height={videoHeight} 
+        player={player} 
+        allowsFullscreen 
+        allowsPictureInPicture
+        contentFit={'cover'}
+        nativeControls
+        />
         {loadingVideo && (
         <LoaderContainer width={screenWidth} height={videoHeight}>
-          <ActivityIndicator size="large" color="#ffffff" />
+          <ActivityIndicator size={40} color="#ffffff" />
         </LoaderContainer>
           )}
         </View>

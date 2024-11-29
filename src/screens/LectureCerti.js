@@ -7,6 +7,7 @@ import { useRoute } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
 import { useDomain } from "../context/domaincontext";
 import { parseString } from 'react-native-xml2js';
+import { UserContext } from "../context/userContext";
 import axios from 'axios';
 
 const LectureCerti = ({ navigation }) => {
@@ -141,7 +142,6 @@ const LectureCerti = ({ navigation }) => {
       } else {
         Alert.alert("시스템 오류", "mOTP시스템 장애가 발생하였습니다. 휴대폰 인증을 시도하세요.");
         console.log("OTP 인증 응답:", data);
-
       }
     } catch (error) {
       console.error("네트워크 오류:", error);
@@ -164,14 +164,10 @@ const LectureCerti = ({ navigation }) => {
   const [encData, setEncData] = useState(null);
   const [webviewVisible, setWebviewVisible] = useState(false);
  
-  /////////////////////////////////////////////////////// 휴대폰 인증 /////////////////////////////////////////////////
-  const getEncData = async () => {
-    if (Platform.OS === 'ios') {
-      Alert.alert("휴대폰 본인인증", "휴대폰 인증은 본인명의 휴대폰만 인증 가능합니다.");
-    } else {
-      Alert.alert("휴대폰 본인인증", "휴대폰 인증은 본인명의 휴대폰만 인증 가능합니다. [문자(SMS)인증] 이용 바랍니다. ");
-    }
+  /////////////////////////////////////////////////////// 휴대폰 인증 ////////////////////////////////////////////////
 
+  const getEncData = async () => {
+      Alert.alert("휴대폰 본인인증", "휴대폰 인증은 본인명의 휴대폰만 인증 가능합니다.");
     try {
       const response = await axios.post(`${domain}/mobile/create_encoded_data.php`, {
         lectureCode: LectureCode
@@ -182,17 +178,6 @@ const LectureCerti = ({ navigation }) => {
       console.error('Error fetching enc data:', error);
     }
   };
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     // 화면이 포커스 되었을 때 탭바 숨기기
-  //     navigation.getParent()?.setOptions({ tabBarStyle: { display: webviewVisible ? 'none' : 'flex' } });
-
-  //     return () => {
-  //       // 화면이 벗어날 때 탭바 다시 표시
-  //       navigation.getParent()?.setOptions({ tabBarStyle: { display: 'flex' } });
-  //     };
-  //   }, [webviewVisible, navigation])
-  // );
 
   // XML 파싱을 Promise로 변환
   const parseXml = (xmlData) => {
@@ -211,8 +196,11 @@ const LectureCerti = ({ navigation }) => {
   const handleMobileSubmit = async () => {
     const USRDT = new Date().toISOString(); // 현재 시간 사용
     const CLASS_AGENT_PK = `${LectureCode},${LectureTermeIdx}`;
-
+  
     try {
+      
+      alert('인증 성공');
+
       const response = await axios.post("https://emon.hrdkorea.or.kr/EAIServer/SOURCE/ExConn/LMS/pSubOtpLog.jsp", 
         new URLSearchParams({
         AGTID: AgtId,
@@ -393,26 +381,11 @@ const ButtonText = styled.Text`
   font-size: 16px;
   font-weight: bold;
 `;
+
 const webViewSource = {
   uri: 'https://nice.checkplus.co.kr/CheckPlusSafeModel/checkplus.cb',
   method: 'POST',
   body: `m=checkplusService&EncodeData=${encData}`,
-};
-
-const handleIntentUrl = async (url) => {
-  console.log(url);
-  try {
-    const canOpen = await Linking.canOpenURL(url);
-    console.log(`Can open: ${canOpen}`); // 추가 로그
-    if (canOpen) {
-      await Linking.openURL(url);
-    } else {
-      Alert.alert('앱을 열 수 없습니다.', '해당 앱이 설치되어 있지 않거나 URL 형식이 잘못되었습니다.');
-    }
-  } catch (err) {
-    console.error('앱을 여는 중 오류 발생:', err);
-    Alert.alert('오류 발생', '앱을 여는 도중 오류가 발생했습니다.');
-  }
 };
 
 
@@ -420,6 +393,11 @@ if (Platform.OS === 'ios') {
   webViewSource.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };  // iOS에서만 헤더 추가
 }
 
+const { userNm, userMb, userBd, updateUserData} = useContext(UserContext);
+
+useEffect(() => {
+  updateUserData();
+}, []);
 
   return (
     
@@ -471,21 +449,28 @@ if (Platform.OS === 'ios') {
           onNavigationStateChange={(event) => {
             console.log('Navigated to URL:', event.url);
             if (event.url.includes('checkplus_success')) {
-              alert('인증 성공');
-              setWebviewVisible(false);
-              handleMobileSubmit();
+              console.log('Waiting for PHP response...');
             } else if (event.url.includes('checkplus_fail')) {
               alert('인증 실패');
               setWebviewVisible(false);
             }
           }}
-          onShouldStartLoadWithRequest={(event) => {
-            console.log('test'); // 이 부분이 Android에서 출력되는지 확인
-            if (event.url.startsWith("intent:")) {
-              handleIntentUrl(event.url);
-              return false;
+        
+          onMessage={(event) => {
+            const data = JSON.parse(event.nativeEvent.data);
+            console.log('Received data from WebView:', data);
+
+            const { birthDate, mobileNo, name } = data;
+          //본인검증
+            if ((userMb == mobileNo) && (userNm == name) && (userBd == birthDate)) {
+              console.log('본인 인증 성공:', userMb,mobileNo,userNm,name,userBd,birthDate);
+              setWebviewVisible(false);
+              handleMobileSubmit();
+            } else {
+              console.log('본인 인증 실패:', userMb,mobileNo,userNm,name,userBd,birthDate);
+              alert('인증 실패. 본인 확인 정보가 다릅니다.');
+              setWebviewVisible(false);
             }
-            return true;
           }}
         />
           <CloseButton onPress={() => setWebviewVisible(false)}>

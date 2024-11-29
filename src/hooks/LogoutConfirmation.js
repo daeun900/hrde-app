@@ -32,6 +32,7 @@ export const useLogoutConfirmation = () => {
       if (isLoggingOutRef.current) return;
       
       e.preventDefault();
+      console.log('test')
       triggerLogout();
     });
     return unsubscribe;
@@ -46,6 +47,8 @@ const handleLogout = async (navigation, clearLectures, domain) => {
     await axios.post(`${domain}/mobile/sign_out.php`, {});
     await AsyncStorage.removeItem('userNm');
     await AsyncStorage.removeItem('userId');
+    await AsyncStorage.removeItem('userBd');
+    await AsyncStorage.removeItem('userMb');
     clearLectures();
 
     navigation.reset({

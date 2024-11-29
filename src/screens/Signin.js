@@ -50,7 +50,6 @@ const storeData = async () => {
       createdTime: currentTimeStamp,
       expirationTime: twoHoursLaterTimeStamp
     }));
-    console.log('Data stored successfully');
   } catch (error) {
     console.error('Error storing data:', error);
   }
@@ -84,15 +83,23 @@ const Signin = ({navigation}) => {
         console.log(domain)
         const response = await axios.post(`${domain}/mobile/sign_in.php`, { id: id, pwd: password });
         const result = response.data.result;
-        const name = response.data.name;
+
+
         console.log('Server response:', response.data);
         console.log('Result:', result);
-        
-        if (result === "Y") {
-          setSession('userId', id); //아이디 세션 저장
-          setSession('userNm', name); //이름 세션 저장
 
-          navigation.navigate("Tab", { name: name });
+        if (result === "Y" || result === "A" || result === "P" || result === "AP") {
+          const name = response.data.name;
+          const mobile = response.data.mobile.replace(/-/g, "");;
+          const birthday = response.data.birthday.replace(/-/g, "");;
+          
+          setSession('userId', id); // 아이디 세션 저장
+          setSession('userNm', name); // 이름 세션 저장
+          setSession('userMb', mobile); // 전화번호 세션 저장
+          setSession('userBd', birthday); // 생년월일 세션 저장
+        }
+        if (result === "Y") {
+          navigation.navigate("Tab");
         } else if (result === "N1") {
           Alert.alert("로그인 실패", "아이디나 비밀번호를 확인하세요.");
           setID("");
@@ -104,13 +111,19 @@ const Signin = ({navigation}) => {
           Alert.alert("로그인 실패", "휴면 계정입니다. 관리자에게 문의하세요.");
         }
         else if (result === "A") {
-          Alert.alert("로그인 실패", "필수동의사항 미동의 회원입니다. PC버전으로 접속 하여 필수 동의사항 동의 후 이용 바랍니다.");
+          Alert.alert("로그인", "필수 동의사항 미동의 회원입니다. 필수 동의사항 동의 후 이용 바랍니다.",[
+            { text: '확인', onPress: () =>  navigation.navigate("Agree", { id: id }) },
+          ]);
         }
         else if (result === "P") {
-          Alert.alert("로그인 실패", "초기비밀번호 이용중입니다. PC버전으로 접속 하여 본인인증 및 비밀번호 변경 후 이용 바랍니다.");
+          Alert.alert("로그인", "초기 비밀번호 이용중입니다. 비밀번호 변경 후 이용 바랍니다.",[
+            { text: '확인', onPress: () =>  navigation.navigate("ChangePwd", { id: id }) },
+          ]);
         }
         else if (result === "AP") {
-          Alert.alert("로그인 실패", "초기비밀번호 이용중입니다. PC버전으로 접속 하여 본인인증 및 비밀번호 변경 후 이용 바랍니다.");
+          Alert.alert("로그인", "초기 비밀번호 이용중입니다. 필수 동의사항 동의 및 비밀번호 변경 후 이용 바랍니다.",[
+              { text: '확인', onPress: () =>  navigation.navigate("Agree", { id: id }) },
+            ]);
         }
       } catch (err) {
         console.log(`Error Message: ${err}`);

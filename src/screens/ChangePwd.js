@@ -1,75 +1,139 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useState, useContext, useEffect } from 'react';
+import { Alert, Platform, View, BackHandler } from 'react-native';
 import styled from 'styled-components/native';
-import { Input } from '../components';
+import { useDomain } from "../context/domaincontext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { UserContext } from "../context/userContext";
+import useLogoutHandler from '../hooks/LogoutHandler';
+import WebView from 'react-native-webview';
+import axios from 'axios';
 
-export default function ChangePwd() {
-  const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
-  const refPassword = useRef(null);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+export default function Step1Auth({ navigation, route }) {
+  const insets = useSafeAreaInsets();
+  const { id } = route.params; 
+  const { domain } = useDomain();
 
-  const handleChangePassword = () => {
-    if (!password || !confirmPassword) {
-      Alert.alert('오류', '모든 필드를 입력해주세요.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('오류', '비밀번호가 일치하지 않습니다.');
-      return;
-    }
-    Alert.alert('성공', '비밀번호가 성공적으로 변경되었습니다.');
-    // 여기서 비밀번호 변경 API 요청 등을 추가할 수 있습니다.
+  //뒤로가기 시 로그아웃
+  useLogoutHandler(navigation, domain);
+
+  //encData받기
+  const [encData, setEncData] = useState(null);
+
+  const getEncData = async () => {
+    Alert.alert("휴대폰 본인인증", "휴대폰 인증은 본인명의 휴대폰만 인증 가능합니다.");
+
+  try {
+    const response = await axios.post(`${domain}/mobile/create_encoded_data.php`, {
+      lectureCode: 'PWCHANGE'
+    });
+    setEncData(response.data.encData);  // 서버에서 암호화된 데이터 받음
+    setWebviewVisible(true);  // 인증 시작
+  } catch (error) {
+    console.error('Error fetching enc data:', error);
+  }
+};
+
+//휴대폰 본인인증 띄우기
+const [webviewVisible, setWebviewVisible] = useState(false);
+
+  const webViewSource = {
+    uri: 'https://nice.checkplus.co.kr/CheckPlusSafeModel/checkplus.cb',
+    method: 'POST',
+    body: `m=checkplusService&EncodeData=${encData}`,
+  };
+
+  if (Platform.OS === 'ios') {
+    webViewSource.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };  // iOS에서만 헤더 추가
+  }
+  
+  //본인검증에 필요한 값
+  const { userNm, userMb, userBd, updateUserData} = useContext(UserContext);
+
+  useEffect(() => {
+  updateUserData();
+  }, []);
+
+  //본인인증 성공
+  const handleMobileSubmit = () => {
+    navigation.replace("ChangePwd2", { id });
   };
 
   return (
+    <View insets={insets} style={{flex:1, paddingTop: insets.top, backgroundColor:'#fff'}}>
+ 
+    {!webviewVisible ? (
+    <>
     <Container insets={insets}>
       <Title>비밀번호 변경</Title>
       <SubTitle>최초 로그인 시, 비밀번호를 변경하여야 합니다.</SubTitle>
-      <Input 
-        label="비밀번호" 
-        placeholder="비밀번호를 입력하세요."
-        returnKeyType="next"
-        value={password}
-        onChangeText={setPassword}
-        onSubmitEditing={()=>refPassword.current.focus()}
-        containerStyle={{
-          borderTopWidth: 1,
-          borderTopColor:'#ddd',
-          paddingTop:20,
-        }}
-        inputStyle={{
-          backgroundColor: '#f8f8f8',
-      }}
-        />
-        <BottomText>
-        ※ 비밀번호는 영문, 숫자, 특수문자 중 2개 이상의 조합으로 10자 이상 또는 3개 이상의 조합으로 8자 이상 사용하세요.</BottomText>
-     <Input 
-        ref= {refPassword}
-        label="비밀번호 확인" 
-        placeholder="비밀번호를 한번 더 입력하세요."
-        returnKeyType="next"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        isPassword={true}
-        onSubmitEditing={setConfirmPassword}
-        containerStyle={{
-          borderTopWidth: 1,
-          borderTopColor:'#ddd',
-          paddingTop:20
-        }}
-        inputStyle={{
-          backgroundColor: '#f8f8f8',
-      }}
-      />
-      <BottomText>
-        ※ 정확한 확인을 위해 비밀번호를 한번 더 입력하세요.
-      </BottomText>
-      <ChangeButton onPress={handleChangePassword}>
-        <ButtonText>변경하기</ButtonText>
-      </ChangeButton>
+
+      <StepIndicator>
+        <StepItem>
+          <StepCircle active>
+            <StepNumber>1</StepNumber>
+          </StepCircle>
+          <StepLabel active>본인인증</StepLabel>
+        </StepItem>
+        <StepLine />
+        <StepItem>
+          <StepCircle>
+            <StepNumber>2</StepNumber>
+          </StepCircle>
+          <StepLabel>비밀번호 변경</StepLabel>
+        </StepItem>
+      </StepIndicator>
+      <Description>
+        비밀번호 변경을 위해 본인인증이 필요합니다. 아래 버튼을 눌러 인증을 진행하세요.
+      </Description>
+
+      <AuthButton onPress={getEncData}>
+        <AuthButtonText>휴대폰 본인인증</AuthButtonText>
+      </AuthButton>
     </Container>
+      </>
+        ) : (
+          <>
+        <WebView
+          key={encData}
+          source={webViewSource}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          allowFileAccess={true}
+          androidHardwareAccelerationDisabled={true}  
+          setSupportMultipleWindows={false}
+          originWhitelist={['*']}
+          onNavigationStateChange={(event) => {
+            console.log('Navigated to URL:', event.url);
+            if (event.url.includes('checkplus_success')) {
+              console.log('Waiting for PHP response...');
+            } else if (event.url.includes('checkplus_fail')) {
+              alert('인증 실패');
+              setWebviewVisible(false);
+            }
+          }}
+        
+          onMessage={(event) => {
+            const data = JSON.parse(event.nativeEvent.data);
+            console.log('Received data from WebView:', data);
+            const { birthDate, mobileNo, name } = data;
+          //본인검증
+            if ((userMb == mobileNo) && (userNm == name) && (userBd == birthDate)) {
+              console.log('본인 인증 성공:', userMb,mobileNo,userNm,name,userBd,birthDate);
+              setWebviewVisible(false);
+              handleMobileSubmit();
+            } else {
+              console.log('본인 인증 실패:', userMb,mobileNo,userNm,name,userBd,birthDate);
+              alert('인증 실패. 본인 확인 정보가 다릅니다.');
+              setWebviewVisible(false);
+            }
+          }}
+        />
+          <CloseButton insets={insets}  onPress={() => setWebviewVisible(false)}>
+            <ButtonText>닫기</ButtonText>
+          </CloseButton>
+       </>
+      )}
+    </View>
   );
 }
 
@@ -88,26 +152,82 @@ const Title = styled.Text`
 const SubTitle = styled.Text`
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 20px;
 `;
 
-const BottomText = styled.Text`
-  color:#606060;
-  line-height: 20px;
-  margin-bottom: 10px;
-
-`
-
-const ChangeButton = styled(TouchableOpacity)`
-  background-color: #007bff;
-  padding: 15px;
-  border-radius: 5px;
+const StepIndicator = styled.View`
+  flex-direction: row;
   align-items: center;
-  margin-top: 30px;
+  padding: 15px 0;
+  margin: 15px 0;
+  justify-content: center;
+  border-bottom-width: 1px;
+  border-bottom-color: #ddd;
+`;
+
+const StepItem = styled.View`
+  align-items: center;
+`;
+
+const StepCircle = styled.View`
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  background-color: ${({ active }) => (active ? '#007bff' : '#ccc')};
+  justify-content: center;
+  align-items: center;
+`;
+
+const StepNumber = styled.Text`
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+`;
+
+const StepLabel = styled.Text`
+  font-size: 14px;
+  font-weight: bold;
+  color: ${({ active }) => (active ? '#007bff' : '#ccc')};
+  margin-top: 5px;
+`;
+
+const StepLine = styled.View`
+  width: 40px;
+  height: 2px;
+  background-color: #ccc;
+  margin: 0 10px;
+`;
+
+const Description = styled.Text`
+  font-size: 18px;
+  color: #606060;
+  text-align: center;
+  margin: 20px 0;
+`;
+
+const AuthButton = styled.TouchableOpacity`
+  background-color: #007bff;
+  padding: 15px 30px;
+  border-radius: 5px;
+`;
+
+const AuthButtonText = styled.Text`
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+`;
+
+const CloseButton = styled.TouchableOpacity`
+  position: absolute;
+  top: ${({ insets }) => insets.top + 20}px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 5px;
 `;
 
 const ButtonText = styled.Text`
-  color: #fff;
+  color: white;
   font-size: 16px;
   font-weight: bold;
 `;

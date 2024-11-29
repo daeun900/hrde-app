@@ -19,7 +19,6 @@ export const LectureProvider = ({ children }) => {
       const userData = JSON.parse(userIdSession);
       if (userData && userData.value) {
         const userId = userData.value;
-        console.log('userId 값 ---->', userId);
         const response = await axios.post(`${domain}/mobile/lecture_list.php`, { id: userId });
 
         console.log('Server response:', response.data);

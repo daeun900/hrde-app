@@ -2,6 +2,7 @@ import Start  from './Start';
 import Signin from './Signin';
 import Agree from './Agree';
 import ChangePwd from './ChangePwd';
+import ChangePwd2 from './ChangePwd2';
 
 //메인
 import Home from './Home'
@@ -28,4 +29,4 @@ import Faq from './Faq';
 import FaqList from './FaqList';
 
 
-export {Start, Signin,Agree,ChangePwd, Home, Notification, LectureList,LectureDetail,LectureCerti,LecturePlayer, CScenter,Inquiry,InquirySubmit,InquiryComplete,InquiryView, Etc, Notice, NoticeView,Faq,FaqList};
+export {Start, Signin,Agree,ChangePwd,ChangePwd2, Home, Notification, LectureList,LectureDetail,LectureCerti,LecturePlayer, CScenter,Inquiry,InquirySubmit,InquiryComplete,InquiryView, Etc, Notice, NoticeView,Faq,FaqList};

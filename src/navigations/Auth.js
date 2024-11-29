@@ -2,7 +2,7 @@ import React, {useContext} from "react";
 import { TouchableOpacity } from "react-native";
 import { ThemeContext } from "styled-components/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import { Start, Signin, Notification, Agree, ChangePwd } from "../screens";
+import { Start, Signin, Notification, Agree, ChangePwd, ChangePwd2 } from "../screens";
 import {Feather} from '@expo/vector-icons'
 import TabNav from "./Tab";
 
@@ -28,12 +28,18 @@ const Auth = () => {
        <Stack.Screen
         name="Agree"
         component={Agree}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, gestureEnabled: false}}
+        
       />
        <Stack.Screen
         name="ChangePwd"
         component={ChangePwd}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="ChangePwd2"
+        component={ChangePwd2}
+        options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
         name="Tab"

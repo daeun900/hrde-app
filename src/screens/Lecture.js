@@ -1,11 +1,12 @@
 import React,{useEffect, useState, useContext, useCallback}from "react";
 import styled from "styled-components/native";
-import { StyleSheet, Platform,View, FlatList, ActivityIndicator,Image} from "react-native";
+import { StyleSheet, Platform,View, FlatList, ActivityIndicator,Image, Linking} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TopSec} from "../components";
 import { useLectureContext } from "../context/lectureContext";
 import { UserContext } from "../context/userContext";
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Container = styled.ScrollView`
   background-color: #F8F8F8 ;
@@ -86,10 +87,29 @@ const styles = StyleSheet.create({
 const LectureList = ({ navigation }) => {
   const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
   const { lectures, fetchLectureData  } = useLectureContext(lectures);
-  const {  userNm} = useContext(UserContext);
+  const { userNm} = useContext(UserContext);
+  const [userId, setUserId] = useState('');
+
+  //userID추출
+  const getUserId = async () => {
+    try {
+      const idString = await AsyncStorage.getItem('userId');
+      if (idString !== null) {
+        const idObject = JSON.parse(idString);
+        const userId = idObject.value;
+        setUserId(userId);
+        return userId;
+      }
+    } catch (error) {
+      console.error('Failed to fetch the user ID:', error);
+    }
+    return null; 
+  };
+  
 
   useEffect(() => {
     fetchLectureData();
+    getUserId();
   }, []);
 
   useFocusEffect(
@@ -111,20 +131,56 @@ const LectureList = ({ navigation }) => {
     <View insets={insets} style={{flex:1}}>
         <TopSec name={userNm}/>
         <Container contentContainerStyle={{ paddingBottom: insets.bottom + 20}}>
-            <FlatList
-              data={lectures}
-              renderItem={({ item }) => <Item ContentsName={item.ContentsName} ProgressStep={item.ProgressStep} ProgressNum={item.ProgressNum} Chapter={item.Chapter} ProgressP={item.ProgressP} Seq={item.Seq} navigation={navigation} />}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
+          <FlatList
+            data={lectures}
+            renderItem={({ item }) => (
+              <Item
+                ContentsName={item.ContentsName}
+                ProgressStep={item.ProgressStep}
+                ProgressNum={item.ProgressNum}
+                Chapter={item.Chapter}
+                ProgressP={item.ProgressP}
+                Seq={item.Seq}
+                SafeLecture={item.SafeLecture}
+                SafeIdCode={item.SafeIdCode}
+                navigation={navigation}
+                userId={userId}
               />
+            )}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+          />
         </Container>
     </View>
   );
 }; 
 
-const Item = ({ContentsName,ProgressStep,ProgressNum, Chapter, ProgressP, Seq ,navigation}) => {
+
+
+const Item = ({ContentsName,ProgressStep,ProgressNum, Chapter, ProgressP, Seq, SafeLecture, SafeIdCode, navigation, userId}) => {
+  
+  const handleLecturePress = async () => {
+    try {
+      if (SafeLecture === "Y" && userId) {
+        const SafeId = `${SafeIdCode}${userId}`;
+        console.log('산업안전에 전달값:',SafeId)
+        const url = `https://m.hrdesafe.com/loginsso_id.php?ID=${SafeId}`;
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          Alert.alert("오류", "인터넷 브라우저를 열 수 없습니다.");
+        }
+      } else {
+        navigation.navigate("LectureDetail", { Seq });
+      }
+    } catch (err) {
+      Alert.alert("오류", "URL 열기 실패: " + err.message);
+    }
+  };
+
   return(
-    <Lecture  style={styles.shadow} activeOpacity={.8} onPress={() => navigation.navigate("LectureDetail", {Seq})}>
+    <Lecture  style={styles.shadow} activeOpacity={.8} onPress={handleLecturePress}>
       <TitleBox>
           <Title>{ContentsName}</Title>
       </TitleBox>

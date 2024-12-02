@@ -36,7 +36,9 @@ export const LectureProvider = ({ children }) => {
             ProgressNum: lecture[2],
             Chapter: lecture[3],
             ProgressP: lecture[4],
-            Seq: lecture[5]
+            Seq: lecture[5],
+            SafeLecture:lecture[6],
+            SafeIdCode:lecture[7]
           };
         });
 

@@ -53,10 +53,11 @@ const InputContainer = styled.View`
 
 const CaptchaCanvas = styled(Canvas)`
   position: absolute;
-  top: 24px;
+  top: 50%;
   left: 10px;
   width: 150px;
-  height: 50px;
+  height: 30px;
+  margin-top: -15px;
 `;
 
 const InquirySubmit = ({ navigation }) => {
@@ -196,7 +197,7 @@ const InquirySubmit = ({ navigation }) => {
       });
   };
 
-  const renderItem = () => (
+  const renderItem = ({item}) => (
     <Container contentContainerStyle={{ paddingBottom: insets.bottom }}>
       <View style={{ flexDirection: 'row' }}>
         <Label>이름</Label>
@@ -266,7 +267,7 @@ const InquirySubmit = ({ navigation }) => {
       <FlatList
         data={[{ id: 'inquiry', key: 'inquiry' }]}
         renderItem={renderItem}
-        keyExtractor={(item) => item.key}
+        keyExtractor={(item) => item.id}
       />
     </KeyboardAvoidingView>
   );

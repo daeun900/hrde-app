@@ -72,7 +72,7 @@ const NullContainer = styled.View`
 `;
 
 
-const AccordionItem = ({ question, answer, status, date, idx  }) => {
+const AccordionItem = ({ question, answer, status, date, idx, content  }) => {
   const [expanded, setExpanded] = useState(false);
   const [fetchedAnswer, setFetchedAnswer] = useState("");
   const { domain } = useDomain();
@@ -113,6 +113,7 @@ const AccordionItem = ({ question, answer, status, date, idx  }) => {
             <SmallTxt>{date}</SmallTxt>
           </FlexBox>
           <MidTxt>{question}</MidTxt>
+          <SmallTxt>{content}</SmallTxt>
         </QuestionText>
         {status === '답변완료' && (
           <Entypo
@@ -171,10 +172,11 @@ const InquiryView = ({ navigation }) => {
         if (response.data && response.data.askList) {
           setData(response.data.askList.map(item => ({
             question: item[0],
-            date: item[1],
-            status: statusMap[item[2]] || 'Unknown',
+            content:item[1],
+            date: item[2],
+            status: statusMap[item[3]] || 'Unknown',
             answer: null,
-            idx: item[3]  
+            idx: item[4]  
           })));
         }
         console.log(userId);
@@ -206,6 +208,7 @@ const InquiryView = ({ navigation }) => {
             <AccordionItem
               key={index}
               question={item.question}
+              content={item.content}
               answer={item.answer}
               status={item.status}
               date={item.date}

@@ -145,13 +145,22 @@ const getDeviceId = async () => {
 };
 
   //자동로그아웃
-  const handleLoginStatus = async (status, currentDeviceId) => {
+  const handleLoginStatus = async (status) => {
     const deviceId = await getDeviceId();
+    const storedDeviceId = await AsyncStorage.getItem('deviceId');
+
+    if (!storedDeviceId) {
+      await AsyncStorage.setItem('deviceId', deviceId);
+    }
+
+    // deviceId가 변경되지 않았는지 확인
+    const isDeviceUnchanged = storedDeviceId === deviceId;
+    console.log(isDeviceUnchanged)
 
     if (status === 'Empty') {
       triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
     } else 
-    if (status === 'N'&& currentDeviceId !== deviceId) {
+    if (status === 'N' &&  !isDeviceUnchanged) {
       triggerLogout(true, '다른 기기에서 로그인하여 로그아웃 처리됩니다.');
     }
   };

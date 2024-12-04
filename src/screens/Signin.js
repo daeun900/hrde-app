@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDomain } from "../context/domaincontext";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Device from 'expo-device';
 
 const Container = styled.Pressable`
   flex: 1;
@@ -69,11 +70,19 @@ const Signin = ({navigation}) => {
   const [password, setPassword] = useState('');
   const refPassword = useRef(null);
 
-  const _handleSigninBtnPress = () => {
-    login();
+  const getDeviceId = async () => {
+    if (Device.isDevice) {
+      return Device.osInternalBuildId || Device.modelId || 'unknown_device';
+    }
+    return 'unknown_device';
+  };
+  const _handleSigninBtnPress = async () => {
+    const deviceId2 = await getDeviceId();
+    console.log("Device ID:", deviceId2);
+    login(deviceId2);
   }
 
-  const login = async () => {
+  const login = async (deviceId2) => {
     if (id.trim() === "") {
       Alert.alert("아이디 입력 확인", "아이디가 입력되지 않았습니다.");
     } else if (password.trim() === "") {
@@ -81,9 +90,8 @@ const Signin = ({navigation}) => {
     } else {
       try {
         console.log(domain)
-        const response = await axios.post(`${domain}/mobile/sign_in.php`, { id: id, pwd: password });
+        const response = await axios.post(`${domain}/mobile/sign_in.php`, { id: id, pwd: password, deviceId: deviceId2 });
         const result = response.data.result;
-
 
         console.log('Server response:', response.data);
         console.log('Result:', result);
@@ -97,6 +105,10 @@ const Signin = ({navigation}) => {
           setSession('userNm', name); // 이름 세션 저장
           setSession('userMb', mobile); // 전화번호 세션 저장
           setSession('userBd', birthday); // 생년월일 세션 저장
+
+          // const testApi = await axios.post(`${domain}/mobile/give_session.php`, { id: id, seq: 11 });
+          // const result2 = testApi.data.sessionValue;
+          // console.log('result2:',result2)
         }
         if (result === "Y") {
           navigation.navigate("Tab");
@@ -158,7 +170,7 @@ const Signin = ({navigation}) => {
       <Button title="로그인"  
       containerStyle={{borderRadius: 10}} 
       backgroundColor="#008DF3"
-      onPress={() => login() } />
+      onPress={() => _handleSigninBtnPress() } />
   
     </Container>
   );

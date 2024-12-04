@@ -10,6 +10,7 @@ import {useLogoutConfirmation} from "../hooks/LogoutConfirmation";
 import { useDomain } from "../context/domaincontext";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from '@react-native-community/netinfo';
 import * as Device from 'expo-device';
 
 const Container = styled.ScrollView`
@@ -129,38 +130,54 @@ const Home =  ({ navigation }) => {
       
       const response = await axios.post(`${domain}/mobile/sign_in_status.php`, {
       });
-      handleLoginStatus(response.data.result); 
+      handleLoginStatus(response.data.result,response.data.deviceId); 
     } catch (error) {
       console.error('로그인 상태 체크 오류:', error);
     }
   };
 
 
-// 디바이스 고유 ID 가져오기
-const getDeviceId = async () => {
+  // 디바이스 고유 ID 가져오기
+  const getDeviceId = async () => {
   if (Device.isDevice) {
     return Device.osInternalBuildId || Device.modelId || 'unknown_device';
   }
   return 'unknown_device';
-};
+  };
+
+  let networkCheckTimeout = null;
 
   //자동로그아웃
-  const handleLoginStatus = async (status) => {
+  const handleLoginStatus = async (status,storedDeviceId) => {
     const deviceId = await getDeviceId();
-    const storedDeviceId = await AsyncStorage.getItem('deviceId');
-
-    if (!storedDeviceId) {
-      await AsyncStorage.setItem('deviceId', deviceId);
-    }
 
     // deviceId가 변경되지 않았는지 확인
-    const isDeviceUnchanged = storedDeviceId === deviceId;
-    console.log(isDeviceUnchanged)
+    const isDeviceUnchanged = storedDeviceId === `APP_${deviceId}`;
 
+    console.log(storedDeviceId,deviceId)
+    console.log(isDeviceUnchanged)
     if (status === 'Empty') {
-      triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
-    } else 
-    if (status === 'N' &&  !isDeviceUnchanged) {
+      NetInfo.fetch().then((state) => {
+        if (!state.isConnected) {
+          // 네트워크가 끊겼을 시 3초 대기
+          if (networkCheckTimeout) clearTimeout(networkCheckTimeout);
+
+          networkCheckTimeout = setTimeout(() => {
+            NetInfo.fetch().then((newState) => {
+              if (!newState.isConnected) {
+                triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
+              }
+            });
+          }, 3000); 
+        } else {
+          // 네트워크가 다시 연결된 경우 타임아웃 초기화
+          if (networkCheckTimeout) {
+            clearTimeout(networkCheckTimeout);
+            networkCheckTimeout = null;
+          }
+        }
+      });
+    } else if (status === 'N' &&  !isDeviceUnchanged) {
       triggerLogout(true, '다른 기기에서 로그인하여 로그아웃 처리됩니다.');
     }
   };
@@ -168,6 +185,8 @@ const getDeviceId = async () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       checkLoginStatus();
+      //checkSession();
+
     }, 6000); // 6초마다 세션 상태 확인
 
     return () => clearInterval(intervalId); // 컴포넌트가 언마운트되면 interval 해제

@@ -1,8 +1,11 @@
 {
   "expo": {
-    "name": "hrde-app",
+    "name": "HRDe Solution",
     "slug": "hrde-app",
-    "version": "1.0.3",
+    "scheme": "hrde-app",
+    "platforms": ["ios","android"],
+    "version": "1.0.11",
+    "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.HRDeSolution.HRDe",
-      "buildNumber": "5", 
+      "buildNumber": "11",
       "icon": "./assets/adaptive-icon.png",
       "infoPlist": {
         "UIWebViewAllowsInlineMediaPlayback": true,
@@ -54,6 +57,9 @@
       "eas": {
         "projectId": "c934040d-fbdb-4672-b5de-4b1433c71443"
       }
-    }
+    },
+    "plugins": [
+      "expo-video"
+    ]
   }
 }

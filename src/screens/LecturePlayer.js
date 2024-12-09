@@ -302,8 +302,25 @@ const LecturePlayer = () => {
     };
 
     //video width, height
-    const screenWidth = Dimensions.get('window').width;
-    const videoHeight = (screenWidth * 675) / 1200;
+    const [screenWidth, setScreenWidth] = useState(0);
+    const [videoHeight, setVideoHeight] = useState(0);
+  
+    useEffect(() => {
+      const updateDimensions = () => {
+        const width = Dimensions.get("window").width;
+        setScreenWidth(width);
+        setVideoHeight((width * 675) / 1200);
+      };
+  
+      updateDimensions();
+  
+      const subscription = Dimensions.addEventListener("change", updateDimensions);
+  
+      return () => {
+        subscription.remove();
+      };
+    }, []);
+  
 
     //video 상태 관리
     const player = useVideoPlayer(playPath.current , player => {
@@ -315,6 +332,8 @@ const LecturePlayer = () => {
 
     useEffect(() => {
       console.log('Is the video playing?', isPlaying);
+      console.log("screenWidth:", screenWidth, "videoHeight:", videoHeight);
+
     }, [isPlaying]);
 
     const [status, setPlayerStatus] = useState({})

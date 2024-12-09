@@ -369,15 +369,18 @@ useEffect(() => {
         const newTime = currentTime + 1; // 1초 추가
         setFormattedTime(formatTime(newTime));
         
-        // 업데이트된 studyTime을 서버로 전송
-        sendStudyTimeToServer(newTime);
-
+        // 1분마다 서버로 전송
+        if (newTime % 60 === 0) {
+          sendStudyTimeToServer(newTime);
+        }
+  
         return newTime;
       });
     }, 1000);
   } else {
     clearInterval(timer);
   }
+  
 
   return () => {
     if (timer) {

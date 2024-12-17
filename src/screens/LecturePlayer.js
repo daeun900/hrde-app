@@ -363,9 +363,16 @@ useEffect(() => {
   let timer;
 
   if (isPlaying) {
+    // 타이머 시작 시에도 서버로 전송
+    setStudyTime((prevTime) => {
+      const currentTime = parseInt(prevTime, 10); 
+      sendStudyTimeToServer(currentTime);
+      return currentTime; 
+    });
+  
     timer = setInterval(() => {
       setStudyTime((prevTime) => {
-        const currentTime = parseInt(prevTime, 10); // 문자열을 숫자로 변환
+        const currentTime = parseInt(prevTime, 10); 
         const newTime = currentTime + 1; // 1초 추가
         setFormattedTime(formatTime(newTime));
         

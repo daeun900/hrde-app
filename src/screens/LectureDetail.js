@@ -153,6 +153,7 @@ const LectureDetail = ({ navigation }) => {
             id: userId,
           });
           const fetchedData = response.data;
+          console.log("Lecture Detail 보낸 데이터:", Seq, userId);
           console.log("Lecture Detail 받은 데이터:", fetchedData);
           setData(fetchedData);
         } catch (error) {

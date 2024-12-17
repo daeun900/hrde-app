@@ -107,8 +107,11 @@ const [webviewVisible, setWebviewVisible] = useState(false);
             if (event.url.includes('checkplus_success')) {
               console.log('Waiting for PHP response...');
             } else if (event.url.includes('checkplus_fail')) {
-              alert('인증 실패');
+         
               setWebviewVisible(false);
+              setTimeout(() => {
+                Alert.alert('인증 실패');
+              }, 300);
             }
           }}
         
@@ -123,8 +126,10 @@ const [webviewVisible, setWebviewVisible] = useState(false);
               handleMobileSubmit();
             } else {
               console.log('본인 인증 실패:', userMb,mobileNo,userNm,name,userBd,birthDate);
-              alert('인증 실패. 본인 확인 정보가 다릅니다.');
               setWebviewVisible(false);
+              setTimeout(() => {
+                Alert.alert('인증 실패', '본인 확인 정보가 다릅니다.');
+              }, 300);
             }
           }}
         />

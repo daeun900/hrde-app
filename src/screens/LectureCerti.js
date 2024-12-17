@@ -97,7 +97,7 @@ const LectureCerti = ({ navigation }) => {
                     m_trnDT: USRDT
                   });
 
-                  alert("입과시 mOTP 인증처리가 완료되었습니다.\n 한번 더 mOTP인증처리가 필요합니다.");
+                  alert("입과시 인증처리가 완료되었습니다.\n 한번 더 인증처리가 필요합니다.");
 
                 } catch (error) {
                   console.error("인증 처리 중 오류 발생:", error);
@@ -198,9 +198,6 @@ const LectureCerti = ({ navigation }) => {
     const CLASS_AGENT_PK = `${LectureCode},${LectureTermeIdx}`;
   
     try {
-      
-      alert('인증 성공');
-
       const response = await axios.post("https://emon.hrdkorea.or.kr/EAIServer/SOURCE/ExConn/LMS/pSubOtpLog.jsp", 
         new URLSearchParams({
         AGTID: AgtId,
@@ -451,8 +448,10 @@ useEffect(() => {
             if (event.url.includes('checkplus_success')) {
               console.log('Waiting for PHP response...');
             } else if (event.url.includes('checkplus_fail')) {
-              alert('인증 실패');
               setWebviewVisible(false);
+              setTimeout(() => {
+                Alert.alert('인증 실패');
+              }, 300);
             }
           }}
         
@@ -468,8 +467,10 @@ useEffect(() => {
               handleMobileSubmit();
             } else {
               console.log('본인 인증 실패:', userMb,mobileNo,userNm,name,userBd,birthDate);
-              alert('인증 실패. 본인 확인 정보가 다릅니다.');
               setWebviewVisible(false);
+              setTimeout(() => {
+                Alert.alert('인증 실패', '본인 확인 정보가 다릅니다.');
+              }, 300);
             }
           }}
         />

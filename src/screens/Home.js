@@ -1,5 +1,5 @@
 import React, { useEffect , useContext, useState, useRef} from "react";
-import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ActivityIndicator} from "react-native";
+import { StyleSheet, Platform,Text, View, Image, useWindowDimensions, ImageBackground, ActivityIndicator, AppState} from "react-native";
 import styled from "styled-components/native";
 import { TopSec, Carousel, ImageSliderModal} from "../components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -38,7 +38,7 @@ const Name = styled.View`
 const CarouselBox = styled.View`
   height:300px;
   overflow: visible;
-  margin-left: -20px;
+  margin-left: -40px;
   margin-top: -20px;
 `;
 
@@ -124,7 +124,8 @@ const Home =  ({ navigation }) => {
         const expirationTime = sessionData.expirationTime; 
   
         if (currentTimeStamp > expirationTime) {
-          triggerLogout(true, '세션이 만료되었습니다. 다시 로그인해 주세요.');
+          triggerLogout(true, '세션이 만료되었습니다. 다시 로그인해 주세요.')
+          return;
         }
       }
       
@@ -145,49 +146,40 @@ const Home =  ({ navigation }) => {
   return 'unknown_device';
   };
 
-  let networkCheckTimeout = null;
-
   //자동로그아웃
   const handleLoginStatus = async (status,storedDeviceId) => {
     const deviceId = await getDeviceId();
 
     // deviceId가 변경되지 않았는지 확인
     const isDeviceUnchanged = storedDeviceId === `APP_${deviceId}`;
+    console.log('test')
+    //console.log(storedDeviceId,deviceId)
+    //console.log(isDeviceUnchanged)
 
-    console.log(storedDeviceId,deviceId)
-    console.log(isDeviceUnchanged)
     if (status === 'Empty') {
-      NetInfo.fetch().then((state) => {
-        if (!state.isConnected) {
-          // 네트워크가 끊겼을 시 3초 대기
-          if (networkCheckTimeout) clearTimeout(networkCheckTimeout);
-
-          networkCheckTimeout = setTimeout(() => {
-            NetInfo.fetch().then((newState) => {
-              if (!newState.isConnected) {
-                triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
-              }
-            });
-          }, 3000); 
-        } else {
-          // 네트워크가 다시 연결된 경우 타임아웃 초기화
-          if (networkCheckTimeout) {
-            clearTimeout(networkCheckTimeout);
-            networkCheckTimeout = null;
-          }
-        }
-      });
+      triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
     } else if (status === 'N' &&  !isDeviceUnchanged) {
       triggerLogout(true, '다른 기기에서 로그인하여 로그아웃 처리됩니다.');
     }
   };
 
+// 앱이 포그라운드로 돌아올 때 세션 상태 확인
+  useEffect(() => {
+    const appStateListener = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') { 
+        checkLoginStatus();
+      }
+    });
+    return () => {
+      appStateListener.remove();
+    };
+  }, []);
+
+// 6초마다 세션 상태 확인
   useEffect(() => {
     const intervalId = setInterval(() => {
       checkLoginStatus();
-      //checkSession();
-
-    }, 6000); // 6초마다 세션 상태 확인
+    }, 6000); 
 
     return () => clearInterval(intervalId); // 컴포넌트가 언마운트되면 interval 해제
   }, []);

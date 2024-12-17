@@ -36,7 +36,7 @@ const Carousel = ({data}) => {
         style={{flex: 1}}
         horizontal
         pagingEnabled
-        contentContainerStyle={{width: `${width}`}}
+        contentContainerStyle={{ paddingHorizontal: SPACER }}
         scrollEventThrottle={200}
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect} from "react";
 import { useEvent, useEventListener} from 'expo';
 import styled from "styled-components/native";
-import { Text, View, FlatList, TouchableOpacity, ScrollView, Dimensions, Alert, ActivityIndicator } from "react-native";
+import { Text, View, FlatList, TouchableOpacity, ScrollView, Dimensions, Alert, ActivityIndicator, AppState } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
@@ -302,25 +302,36 @@ const LecturePlayer = () => {
     };
 
     //video width, height
-    const [screenWidth, setScreenWidth] = useState(0);
-    const [videoHeight, setVideoHeight] = useState(0);
-  
+    const [screenWidth, setScreenWidth] = useState(Dimensions.get("window").width);
+    const [videoHeight, setVideoHeight] = useState((Dimensions.get("window").width * 675) / 1200);
+
     useEffect(() => {
       const updateDimensions = () => {
         const width = Dimensions.get("window").width;
         setScreenWidth(width);
         setVideoHeight((width * 675) / 1200);
       };
-  
+
       updateDimensions();
-  
-      const subscription = Dimensions.addEventListener("change", updateDimensions);
-  
+
+      const dimensionSubscription = Dimensions.addEventListener("change", updateDimensions);
+
+      const appStateSubscription = AppState.addEventListener("change", (nextAppState) => {
+        if (nextAppState === "active") {
+          updateDimensions();
+        }
+      });
+
       return () => {
-        subscription.remove();
+        if (dimensionSubscription?.remove) {
+          dimensionSubscription.remove();
+        } else {
+          Dimensions.removeEventListener("change", updateDimensions);
+        }
+        appStateSubscription.remove();
       };
     }, []);
-  
+    
 
     //video 상태 관리
     const player = useVideoPlayer(playPath.current , player => {
@@ -342,8 +353,8 @@ const LecturePlayer = () => {
     useEventListener(player, 'statusChange', ({ status, error }) => {
       setPlayerStatus(status);
       setPlayerError(error);
-      console.log('Player status changed: ', status);
-      console.log('Player error: ', error);
+      //console.log('Player status changed: ', status);
+      //console.log('Player error: ', error);
     });
 
     const [loadingVideo, setLoadingVideo] = useState(true); 

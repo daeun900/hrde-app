@@ -117,52 +117,63 @@ const Home =  ({ navigation }) => {
   const checkLoginStatus = async () => {
     try {
       const storedSession = await AsyncStorage.getItem('userId');
-
+  
+      // 저장된 세션이 있는지 확인
       if (storedSession) {
         const sessionData = JSON.parse(storedSession);
         const currentTimeStamp = Math.floor(Date.now() / 1000); 
         const expirationTime = sessionData.expirationTime; 
   
         if (currentTimeStamp > expirationTime) {
-          triggerLogout(true, '세션이 만료되었습니다. 다시 로그인해 주세요.')
+          triggerLogout(true, '세션이 만료되었습니다. 다시 로그인해 주세요.');
           return;
         }
       }
-      
-      const response = await axios.post(`${domain}/mobile/sign_in_status.php`, {
-      });
-      handleLoginStatus(response.data.result,response.data.deviceId); 
+  
+      // 서버에서 로그인 상태 확인
+      const response = await axios.post(`${domain}/mobile/sign_in_status.php`, {});
+      const status = response.data.result;
+      const storedDeviceId = response.data.deviceId;
+  
+      // 디바이스 고유 ID 가져오기
+      const getDeviceId = async () => {
+        if (Device.isDevice) {
+          return Device.osInternalBuildId || Device.modelId || 'unknown_device';
+        }
+        return 'unknown_device';
+      };
+  
+      // 자동 로그아웃 핸들링
+      const handleLoginStatus = async (status, storedDeviceId) => {
+        const deviceId = await getDeviceId();
+  
+        // deviceId가 변경되지 않았는지 확인
+        const isDeviceUnchanged = storedDeviceId === `APP_${deviceId}`;
+        //console.log(storedDeviceId,deviceId)
+        //console.log(isDeviceUnchanged)
+        
+        if (status === 'Empty') {
+          // 3초 후 상태 재확인
+          setTimeout(async () => {
+            const retryResponse = await axios.post(`${domain}/mobile/sign_in_status.php`, {});
+            const retryStatus = retryResponse.data.result;
+  
+            if (retryStatus === 'Empty') {
+              triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
+            }
+          }, 3000);
+        } else if (status === 'N' && !isDeviceUnchanged) {
+          triggerLogout(true, '다른 기기에서 로그인하여 로그아웃 처리됩니다.');
+        }
+      };
+  
+      // 로그인 상태 확인
+      await handleLoginStatus(status, storedDeviceId);
     } catch (error) {
       console.error('로그인 상태 체크 오류:', error);
     }
   };
-
-
-  // 디바이스 고유 ID 가져오기
-  const getDeviceId = async () => {
-  if (Device.isDevice) {
-    return Device.osInternalBuildId || Device.modelId || 'unknown_device';
-  }
-  return 'unknown_device';
-  };
-
-  //자동로그아웃
-  const handleLoginStatus = async (status,storedDeviceId) => {
-    const deviceId = await getDeviceId();
-
-    // deviceId가 변경되지 않았는지 확인
-    const isDeviceUnchanged = storedDeviceId === `APP_${deviceId}`;
-    console.log('test')
-    //console.log(storedDeviceId,deviceId)
-    //console.log(isDeviceUnchanged)
-
-    if (status === 'Empty') {
-      triggerLogout(true, '세션이 만료되어 로그아웃 처리됩니다.');
-    } else if (status === 'N' &&  !isDeviceUnchanged) {
-      triggerLogout(true, '다른 기기에서 로그인하여 로그아웃 처리됩니다.');
-    }
-  };
-
+  
 // 앱이 포그라운드로 돌아올 때 세션 상태 확인
   useEffect(() => {
     const appStateListener = AppState.addEventListener('change', (nextAppState) => {

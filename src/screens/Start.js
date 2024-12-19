@@ -47,35 +47,26 @@ const Start = ({ navigation }) => {
    const { setDomain } = useDomain(); 
    const [code, setCode] = useState(""); 
 
-  // 입력한 코드 교육원의 도메인 받아오기
-  const fetchDomain = async (centerCode) => {
+  const handleLoginPress = async () => {
+    if (!code) {
+      Alert.alert("", "교육원 코드를 입력해주세요."); 
+      return;
+    }
+
     try {
       const response = await axios.post("https://app.hrdelms.com/edu_center_domain.php", {
-        center: centerCode,
+        center: code,
       });
-
       const domain = response.data.domain;
       if (domain && domain !== "No matching domain found") {
-        setDomain(domain);
+        setDomain(domain); // 도메인 설정
+        navigation.navigate("Signin"); // 유효한 도메인이 설정되면 로그인 화면으로 이동
       } else {
+        setCode(""); // 입력값 초기화
         Alert.alert("오류", "해당 교육원을 찾을 수 없습니다.");
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert("오류", "URL을 가져오는 중 문제가 발생했습니다.");
-    }
-  };
-
-  const handleLoginPress = async () => {
-    if (!code) {
-      Alert.alert("", "교육원 코드를 입력해주세요."); // 교육원 코드 미입력 시 경고창
-      return;
-    }
-  
-    try {
-      await fetchDomain(code); // 도메인 가져오기
-      navigation.navigate("Signin"); // 도메인 설정 후 로그인 화면으로 이동
-    } catch (error) {
+      setCode(""); // 에러 발생 시 입력값 초기화
       Alert.alert("오류", "도메인 설정 중 문제가 발생했습니다.");
     }
   };

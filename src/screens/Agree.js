@@ -12,7 +12,7 @@ import axios from 'axios';
 export default function AgreementScreen({navigation, route}) {
     const insets = useSafeAreaInsets(); //아이폰 노치 문제 해결
     const { domain } = useDomain();
-    const { id } = route.params; 
+    const { result, id } = route.params; 
 
   //뒤로가기 시 로그아웃
   useLogoutHandler(navigation, domain);
@@ -123,14 +123,34 @@ export default function AgreementScreen({navigation, route}) {
     try {
       // axios로 서버 요청
       const response = await axios.post(`${domain}/mobile/after_join_term.php`, requestData);
-      const result = response.data.result; // 서버 응답 결과
+      const result2 = response.data.result; // 서버 응답 결과
 
       // 응답 처리
-      if (result === 'P') {
-        Alert.alert('동의가 완료되었습니다.', '', [
-          { text: '확인', onPress: () => navigation.replace('ChangePwd', { id }) },
-        ]);
-      } else if (result === 'E1') {
+      if (result2 === 'P') {
+        if (result === "A") {
+          Alert.alert(
+            "동의 완료",
+            "필수 동의사항을 동의하셨습니다.",
+            [
+              {
+                text: "확인",
+                onPress: () => navigation.replace("Tab"), 
+              },
+            ]
+          );
+        } else if (result === "AP") {
+          Alert.alert(
+            "비밀번호 변경 필요",
+            "초기 비밀번호를 변경해주세요.",
+            [
+              {
+                text: "확인",
+                onPress: () => navigation.replace("ChangePwd", { id }), 
+              },
+            ]
+          );
+        }
+      } else if (result2 === 'E1') {
         Alert.alert('필수 동의사항을 모두 확인해주세요.');
       } else {
         Alert.alert('처리 중 문제가 발생했습니다. 다시 시도해주세요.');

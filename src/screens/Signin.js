@@ -124,7 +124,7 @@ const Signin = ({navigation}) => {
         }
         else if (result === "A") {
           Alert.alert("로그인", "필수 동의사항 미동의 회원입니다. 필수 동의사항 동의 후 이용 바랍니다.",[
-            { text: '확인', onPress: () =>  navigation.navigate("Agree", { id: id }) },
+            { text: '확인', onPress: () =>  navigation.navigate("Agree", { id: id, result:result }) },
           ]);
         }
         else if (result === "P") {
@@ -134,7 +134,7 @@ const Signin = ({navigation}) => {
         }
         else if (result === "AP") {
           Alert.alert("로그인", "초기 비밀번호 이용중입니다. 필수 동의사항 동의 및 비밀번호 변경 후 이용 바랍니다.",[
-              { text: '확인', onPress: () =>  navigation.navigate("Agree", { id: id }) },
+              { text: '확인', onPress: () =>  navigation.navigate("Agree", { id: id, result:result }) },
             ]);
         }
       } catch (err) {

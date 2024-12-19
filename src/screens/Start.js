@@ -1,5 +1,5 @@
 import React, {useContext, useState, useRef, useEffect} from "react";
-import { ImageBackground, Alert } from "react-native";
+import { ImageBackground, Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { useDomain } from "../context/domaincontext";
 import styled from "styled-components/native";
 import { Button,Image,Input } from "../components";
@@ -73,11 +73,12 @@ const Start = ({ navigation }) => {
   
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <ImageBackground 
       style={{ width: "100%", height: "100%" }}  //View를 꽉채우도록
       source={require("../../assets/intro_bg.png")}  //이미지경로
       resizeMode="cover" // 'cover', 'contain', 'stretch', 'repeat', 'center' 중 선택 
-      >
+      onPress={() => Keyboard.dismiss()} >
       <Container insets={insets}>
         <SelectSec>
           <BigTxt>교육원 코드를 입력해주세요.</BigTxt>
@@ -97,7 +98,7 @@ const Start = ({ navigation }) => {
       
       </Container>
     </ImageBackground>
- 
+     </TouchableWithoutFeedback>
   );
 };
 

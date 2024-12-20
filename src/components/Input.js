@@ -36,6 +36,7 @@ const Input = forwardRef(
     isPassword,
     inputStyle,
     containerStyle,
+    keyboardType,
 }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
 
@@ -63,6 +64,7 @@ const Input = forwardRef(
                 secureTextEntry={isPassword}
                 style={inputStyle}
                 containerStyle={containerStyle}
+                keyboardType={keyboardType} 
             ></StyledInput>
         </Container>
     )
@@ -84,6 +86,7 @@ Input.propTypes = {
     isPassword: PropTypes.bool,
     inputStyle: PropTypes.object,
     containerStyle: PropTypes.object, 
+    keyboardType: PropTypes.string
 }
 
 

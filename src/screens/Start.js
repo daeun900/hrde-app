@@ -87,6 +87,7 @@ const Start = ({ navigation }) => {
             value={code}
             onChangeText={setCode}
             containerStyle={{ marginTop:-10,borderColor: "#EEEEEE" }}
+            keyboardType="numeric" 
           />
         </SelectSec>
        <LoginSec>
